@@ -195,7 +195,7 @@ export class PresenceStack extends CDK.Stack {
                     authorizationType: AppSync.AuthorizationType.API_KEY,
                     apiKeyConfig: {
                         name: "PresenceKey",
-                        expires: CDK.Expiration.after(CDK.Duration.days(7))
+                        expires: CDK.Expiration.after(CDK.Duration.days(1))
                     }
                 },
                 additionalAuthorizationModes: [
