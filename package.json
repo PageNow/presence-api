@@ -1,39 +1,37 @@
 {
   "name": "presence-api",
-  "version": "1.0.0",
-  "description": "API for presence information",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
+  "version": "0.1.0",
+  "bin": {
+    "presence-api": "bin/presence-api.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/PageNow/presence-api.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/PageNow/presence-api/issues"
-  },
-  "homepage": "https://github.com/PageNow/presence-api#readme",
-  "dependencies": {
-    "@aws-cdk/aws-appsync": "^1.112.0",
-    "@aws-cdk/aws-ec2": "^1.112.0",
-    "@aws-cdk/aws-elasticache": "^1.112.0",
-    "@aws-cdk/aws-events": "^1.112.0",
-    "@aws-cdk/aws-events-targets": "^1.112.0",
-    "@aws-cdk/aws-iam": "^1.112.0",
-    "@aws-cdk/aws-lambda": "^1.112.0",
-    "@aws-cdk/core": "^1.112.0",
-    "path": "^0.12.7"
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/node": "^16.3.1",
+    "@aws-cdk/assert": "1.113.0",
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.2.0",
+    "aws-cdk": "1.113.0",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7",
     "aws-sdk": "^2.944.0",
     "redis": "^3.1.2"
+  },
+  "dependencies": {
+    "@aws-cdk/core": "1.113.0",
+    "source-map-support": "^0.5.16",
+    "@aws-cdk/aws-appsync": "^1.113.0",
+    "@aws-cdk/aws-ec2": "^1.113.0",
+    "@aws-cdk/aws-elasticache": "^1.113.0",
+    "@aws-cdk/aws-events": "^1.113.0",
+    "@aws-cdk/aws-events-targets": "^1.113.0",
+    "@aws-cdk/aws-iam": "^1.113.0",
+    "@aws-cdk/aws-lambda": "^1.113.0",
+    "path": "^0.12.7"
   }
 }

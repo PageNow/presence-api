@@ -23,7 +23,7 @@ interface ResolverOptions {
  * 
  * Main stack of the application
  */
-export class PresenceStack extends CDK.Stack {
+export class PresenceApiStack extends CDK.Stack {
 
     private vpc: EC2.Vpc;
     private lambdaSG: EC2.SecurityGroup;
