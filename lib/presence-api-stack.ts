@@ -195,7 +195,7 @@ export class PresenceApiStack extends CDK.Stack {
                     authorizationType: AppSync.AuthorizationType.API_KEY,
                     apiKeyConfig: {
                         name: "PresenceKey",
-                        expires: CDK.Expiration.after(CDK.Duration.days(1))
+                        expires: CDK.Expiration.after(CDK.Duration.days(2))
                     }
                 },
                 additionalAuthorizationModes: [
@@ -318,7 +318,7 @@ export class PresenceApiStack extends CDK.Stack {
         new CDK.CfnOutput(this, "presence-api", {
             value: this.api.graphqlUrl,
             description: "Presence api endpoint",
-            exportName: "preseenceEndpoint"
+            exportName: "presenceEndpoint"
         });
         new CDK.CfnOutput(this, "api-key", {
             value: this.api.apiKey || '',
