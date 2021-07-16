@@ -18,6 +18,12 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
  * `cdk deploy`      deploy this stack to your default AWS account/region
  * `cdk diff`        compare deployed stack with current state
  * `cdk synth`       emits the synthesized CloudFormation template
+
+## Tests
+
+* ```npm run test-stack```: build and launch stack unit tests
+* ```npm run test-fn```: build and launch the lambda function unit tests
+* ```npm run test-integration```: build and launch the api integration tests
  
 ## TODO
 
