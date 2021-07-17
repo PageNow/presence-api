@@ -1,11 +1,11 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
-const { promisfy } = require('util');
+const { promisify } = require('util');
 
-const redisEndpoint = process.env.REDIS_HOST;
-const redisPort = process.env.REDIS_PORT;
+const redisEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPort = process.env.REDIS_PORT || 6379;
 const presence = redis.createClient(redisPort, redisEndpoint);
-const zadd = promisfy(presence.zadd).bind(presence);
+const zadd = promisify(presence.zadd).bind(presence);
 const eventBridge = new AWS.EventBridge();
 const eventBus = process.env.EVENT_BUS;
 
@@ -22,7 +22,7 @@ exports.handler = async function(event) {
         throw new Error("Missing argument 'id'");
     }
     try {
-        const result = await zadd("presence", timestamp, id);
+        const result = await zadd("presence", Date.now(), id);
         if (result === 1)  { // New connection
             await eventBridge.putEvents({
                 Entries: [{

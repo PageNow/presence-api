@@ -1,8 +1,8 @@
 const redis = require('redis');
 const { promisify } = require('util');
 
-const redisEndpoint = process.env.REDIS_HOST;
-const redisPort = process.env.REDIS_PORT;
+const redisEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPort = process.env.REDIS_PORT || 6379;
 
 const presence = redis.createClient(redisPort, redisEndpoint);
 const zscore = promisify(presence.zscore).bind(presence);

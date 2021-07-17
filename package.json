@@ -16,8 +16,10 @@
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.113.0",
+    "@types/graphql": "^14.5.0",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
+    "@types/redis-mock": "^0.17.0",
     "aws-appsync": "^4.0.5",
     "aws-cdk": "1.113.0",
     "aws-sdk": "^2.944.0",
@@ -25,6 +27,7 @@
     "isomorphic-fetch": "^3.0.0",
     "jest": "^26.4.2",
     "redis": "^3.1.2",
+    "redis-mock": "^0.56.3",
     "ts-jest": "^26.2.0",
     "ts-node": "^9.0.0",
     "typescript": "~3.9.7"

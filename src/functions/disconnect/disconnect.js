@@ -1,11 +1,11 @@
 const { promisify } = require('util');
 const AWS = require('aws-sdk');
-const EventBridge = new AWS.EventBridge();
+const eventBridge = new AWS.EventBridge();
 
 const redis = require('redis');
 const eventBus = process.env.EVENT_BUS;
-const redisEndpoint = process.env.REDIS_HOST;
-const redisPort = process.env.REDIS_PORT;
+const redisEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPort = process.env.REDIS_PORT || 6379;
 const presence = redis.createClient(redisPort, redisEndpoint);
 const zrem = promisify(presence.zrem).bind(presence);
 
@@ -35,7 +35,7 @@ exports.handler = async function(event) {
                 Time: Date.now()
             }
         ];
-        await EventBridge.putEvents({ Entries }).promise();
+        await eventBridge.putEvents({ Entries }).promise();
         return { id, status: "offline" };
     } catch (error) {
         return error;

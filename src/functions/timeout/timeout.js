@@ -1,11 +1,11 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
-const { promisfy } = require('util');
+const { promisify } = require('util');
 
 const timeout = parseInt(process.env.TIMEOUT, 10);
 const eventBus = process.env.EVENT_BUS;
-const redisEndpoint = process.env.REDIS_HOST;
-const redisPort = process.env.REDIS_PORT;
+const redisEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPort = process.env.REDIS_PORT || 6379;
 
 const presence = redis.createClient(redisPort, redisEndpoint);
 const eventBridge = new AWS.EventBridge();
@@ -22,7 +22,7 @@ exports.handler = async function() {
     const commands = presence.multi();
     commands.zrangebyscore("presence", "-inf", timestamp);
     commands.zremrangebyscore("presence", "-inf", timestamp);
-    const execute = promisfy(commands.exec).bind(commands);
+    const execute = promisify(commands.exec).bind(commands);
     try {
         // Multiple commands results are returned as an array of result, one entry per command
         // `ids` is the result of the first command

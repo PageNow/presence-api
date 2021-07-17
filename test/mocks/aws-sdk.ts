@@ -7,3 +7,7 @@ const putEventsMock = jest.fn().mockImplementation(event => {
         }))
     };
 });
+
+export class EventBridge {
+    putEvents = putEventsMock
+}
