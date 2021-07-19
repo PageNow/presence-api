@@ -25,6 +25,16 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * ```npm run test-fn```: build and launch the lambda function unit tests
 * ```npm run test-integration```: build and launch the api integration tests
  
+## Local Testing
+
+### Run REDIS with docker locally
+
+Run
+```shell
+cd redis-docker
+docker-compose up -d
+```
+
 ## TODO
 
 [] Change authorization to COGNITO
@@ -34,3 +44,7 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 * https://github.com/aws-samples/aws-appsync-presence-api
 * https://aws.amazon.com/ko/blogs/gametech/building-a-presence-api-using-aws-appsync-aws-lambda-amazon-elasticache-and-amazon-eventbridge/
+
+### Local testing
+
+* https://github.com/aws/aws-sam-cli/issues/318#issuecomment-377770815

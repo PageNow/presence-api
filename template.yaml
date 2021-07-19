@@ -1,0 +1,1317 @@
+Resources:
+  PresenceVPC5404FC46:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/Resource
+  PresenceVPCRedisSubnet1Subnet08262FF3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.42.0.0/24
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Redis
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/RedisSubnet1
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/Subnet
+  PresenceVPCRedisSubnet1RouteTableCA203B66:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      Tags:
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/RedisSubnet1
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/RouteTable
+  PresenceVPCRedisSubnet1RouteTableAssociationACD8D36D:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PresenceVPCRedisSubnet1RouteTableCA203B66
+      SubnetId:
+        Ref: PresenceVPCRedisSubnet1Subnet08262FF3
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/RouteTableAssociation
+  PresenceVPCRedisSubnet2Subnet2EA1B524:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.42.1.0/24
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Redis
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/RedisSubnet2
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/Subnet
+  PresenceVPCRedisSubnet2RouteTable89206F36:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      Tags:
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/RedisSubnet2
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/RouteTable
+  PresenceVPCRedisSubnet2RouteTableAssociation8EE3C076:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PresenceVPCRedisSubnet2RouteTable89206F36
+      SubnetId:
+        Ref: PresenceVPCRedisSubnet2Subnet2EA1B524
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/RouteTableAssociation
+  PresenceVPCLambdaSubnet1Subnet99C81E1C:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.42.2.0/24
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Lambda
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/LambdaSubnet1
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/Subnet
+  PresenceVPCLambdaSubnet1RouteTable3AF87A21:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      Tags:
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/LambdaSubnet1
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/RouteTable
+  PresenceVPCLambdaSubnet1RouteTableAssociation7A0FE804:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PresenceVPCLambdaSubnet1RouteTable3AF87A21
+      SubnetId:
+        Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/RouteTableAssociation
+  PresenceVPCLambdaSubnet2Subnet5C09EBC3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.42.3.0/24
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Lambda
+        - Key: aws-cdk:subnet-type
+          Value: Isolated
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/LambdaSubnet2
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/Subnet
+  PresenceVPCLambdaSubnet2RouteTableB11EF8D3:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      Tags:
+        - Key: Name
+          Value: PresenceApiStack/PresenceVPC/LambdaSubnet2
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/RouteTable
+  PresenceVPCLambdaSubnet2RouteTableAssociation0C3EF9B3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: PresenceVPCLambdaSubnet2RouteTableB11EF8D3
+      SubnetId:
+        Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/RouteTableAssociation
+  PresenceVPCeventsEndPoint682C555D:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName:
+        Fn::Join:
+          - ""
+          - - com.amazonaws.
+            - Ref: AWS::Region
+            - .events
+      VpcId:
+        Ref: PresenceVPC5404FC46
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - Fn::GetAtt:
+            - eventsEndPointSG1AD6A545
+            - GroupId
+      SubnetIds:
+        - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+        - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+      VpcEndpointType: Interface
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceVPC/eventsEndPoint/Resource
+  redisSG7DE41A86:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for REDIS Cluster
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId:
+        Ref: PresenceVPC5404FC46
+    Metadata:
+      aws:cdk:path: PresenceApiStack/redisSG/Resource
+  redisSGfromPresenceApiStacklambdaSg8EC30D1563794DF2C85F:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      Description: from PresenceApiStacklambdaSg8EC30D15:6379
+      FromPort: 6379
+      GroupId:
+        Fn::GetAtt:
+          - redisSG7DE41A86
+          - GroupId
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - lambdaSgD8D93E20
+          - GroupId
+      ToPort: 6379
+    Metadata:
+      aws:cdk:path: PresenceApiStack/redisSG/from PresenceApiStacklambdaSg8EC30D15:6379
+  lambdaSgD8D93E20:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda functions
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      VpcId:
+        Ref: PresenceVPC5404FC46
+    Metadata:
+      aws:cdk:path: PresenceApiStack/lambdaSg/Resource
+  RedisSubnets:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Subnet Group for Redis Cluster
+      SubnetIds:
+        - Ref: PresenceVPCRedisSubnet1Subnet08262FF3
+        - Ref: PresenceVPCRedisSubnet2Subnet2EA1B524
+      CacheSubnetGroupName: RedisSubnets
+    Metadata:
+      aws:cdk:path: PresenceApiStack/RedisSubnets
+  PresenceCluster:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupDescription: PresenceReplicationGroup
+      AutomaticFailoverEnabled: true
+      CacheNodeType: cache.t3.small
+      CacheSubnetGroupName:
+        Ref: RedisSubnets
+      Engine: redis
+      MultiAZEnabled: true
+      NumCacheClusters: 2
+      Port: 6379
+      SecurityGroupIds:
+        - Fn::GetAtt:
+            - redisSG7DE41A86
+            - GroupId
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceCluster
+  redisModule3972F6F0:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket:
+          Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3BucketF32DAE3E
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4
+      CompatibleRuntimes:
+        - nodejs12.x
+      LayerName: presenceLayer
+    Metadata:
+      aws:cdk:path: PresenceApiStack/redisModule/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/layer
+      aws:asset:property: Content
+  heartbeatServiceRoleD63C9062:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/heartbeat/ServiceRole/Resource
+  heartbeatServiceRoleDefaultPolicy2B328071:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: events:PutEvents
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - PresenceBus5D952912
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: heartbeatServiceRoleDefaultPolicy2B328071
+      Roles:
+        - Ref: heartbeatServiceRoleD63C9062
+    Metadata:
+      aws:cdk:path: PresenceApiStack/heartbeat/ServiceRole/DefaultPolicy/Resource
+  heartbeat8A8E5472:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3Bucket879FCA84
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED
+      Role:
+        Fn::GetAtt:
+          - heartbeatServiceRoleD63C9062
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          EVENT_BUS:
+            Ref: PresenceBus5D952912
+      Handler: heartbeat.handler
+      Layers:
+        - Ref: redisModule3972F6F0
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+    DependsOn:
+      - heartbeatServiceRoleDefaultPolicy2B328071
+      - heartbeatServiceRoleD63C9062
+    Metadata:
+      aws:cdk:path: PresenceApiStack/heartbeat/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/heartbeat
+      aws:asset:property: Code
+  statusServiceRole987113E6:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/status/ServiceRole/Resource
+  status13EA9EF7:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3Bucket1FBE7F78
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872
+      Role:
+        Fn::GetAtt:
+          - statusServiceRole987113E6
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+      Handler: status.handler
+      Layers:
+        - Ref: redisModule3972F6F0
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+    DependsOn:
+      - statusServiceRole987113E6
+    Metadata:
+      aws:cdk:path: PresenceApiStack/status/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/status
+      aws:asset:property: Code
+  disconnectServiceRole372F5647:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/disconnect/ServiceRole/Resource
+  disconnectServiceRoleDefaultPolicy43698ECC:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: events:PutEvents
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - PresenceBus5D952912
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: disconnectServiceRoleDefaultPolicy43698ECC
+      Roles:
+        - Ref: disconnectServiceRole372F5647
+    Metadata:
+      aws:cdk:path: PresenceApiStack/disconnect/ServiceRole/DefaultPolicy/Resource
+  disconnect829B70D0:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3Bucket604DC603
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08
+      Role:
+        Fn::GetAtt:
+          - disconnectServiceRole372F5647
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          EVENT_BUS:
+            Ref: PresenceBus5D952912
+      Handler: disconnect.handler
+      Layers:
+        - Ref: redisModule3972F6F0
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+    DependsOn:
+      - disconnectServiceRoleDefaultPolicy43698ECC
+      - disconnectServiceRole372F5647
+    Metadata:
+      aws:cdk:path: PresenceApiStack/disconnect/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/disconnect
+      aws:asset:property: Code
+  timeoutServiceRole175F298C:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/timeout/ServiceRole/Resource
+  timeoutServiceRoleDefaultPolicyC545BCB2:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: events:PutEvents
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - PresenceBus5D952912
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: timeoutServiceRoleDefaultPolicyC545BCB2
+      Roles:
+        - Ref: timeoutServiceRole175F298C
+    Metadata:
+      aws:cdk:path: PresenceApiStack/timeout/ServiceRole/DefaultPolicy/Resource
+  timeoutD1A38E79:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3Bucket3CC2E988
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63
+      Role:
+        Fn::GetAtt:
+          - timeoutServiceRole175F298C
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          TIMEOUT: "10000"
+          EVENT_BUS:
+            Ref: PresenceBus5D952912
+      Handler: timeout.handler
+      Layers:
+        - Ref: redisModule3972F6F0
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
+          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+    DependsOn:
+      - timeoutServiceRoleDefaultPolicyC545BCB2
+      - timeoutServiceRole175F298C
+    Metadata:
+      aws:cdk:path: PresenceApiStack/timeout/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/timeout
+      aws:asset:property: Code
+  ondisconnectServiceRoleC1A63C53:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/on_disconnect/ServiceRole/Resource
+  ondisconnectServiceRoleDefaultPolicy4D06E5F1:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: appsync:GraphQL
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - Fn::GetAtt:
+                      - PresenceAPI097D0E1D
+                      - Arn
+                  - /*
+        Version: "2012-10-17"
+      PolicyName: ondisconnectServiceRoleDefaultPolicy4D06E5F1
+      Roles:
+        - Ref: ondisconnectServiceRoleC1A63C53
+    Metadata:
+      aws:cdk:path: PresenceApiStack/on_disconnect/ServiceRole/DefaultPolicy/Resource
+  ondisconnect006B6FED:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3Bucket7E4533C9
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51
+      Role:
+        Fn::GetAtt:
+          - ondisconnectServiceRoleC1A63C53
+          - Arn
+      Environment:
+        Variables:
+          GRAPHQL_ENDPOINT:
+            Fn::GetAtt:
+              - PresenceAPI097D0E1D
+              - GraphQLUrl
+      Handler: on_disconnect.handler
+      Runtime: nodejs12.x
+    DependsOn:
+      - ondisconnectServiceRoleDefaultPolicy4D06E5F1
+      - ondisconnectServiceRoleC1A63C53
+    Metadata:
+      aws:cdk:path: PresenceApiStack/on_disconnect/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/on_disconnect
+      aws:asset:property: Code
+  PresenceAPIApiLogsRole892F61D3:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/ApiLogsRole/Resource
+  PresenceAPI097D0E1D:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: AMAZON_COGNITO_USER_POOLS
+      Name: PresenceAPI
+      AdditionalAuthenticationProviders:
+        - AuthenticationType: AWS_IAM
+      LogConfig:
+        CloudWatchLogsRoleArn:
+          Fn::GetAtt:
+            - PresenceAPIApiLogsRole892F61D3
+            - Arn
+        FieldLogLevel: ALL
+      UserPoolConfig:
+        AwsRegion:
+          Ref: AWS::Region
+        DefaultAction: ALLOW
+        UserPoolId: us-east-1_014HGnyeu
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/Resource
+  PresenceAPISchemaB664B62D:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      Definition: |
+        schema {
+          query: Query
+          mutation: Mutation
+          subscription: Subscription
+        }
+        enum Status {
+          online
+          offline
+        }
+        type Presence @aws_cognito_user_pools @aws_iam {
+          id: ID!
+          status: Status!
+        }
+        type Query {
+          heartbeat(id: ID!): Presence
+          status(id: ID!): Presence
+        }
+        type Mutation {
+          connect(id: ID!): Presence
+          disconnect(id: ID!): Presence
+          disconnected(id: ID!): Presence
+          @aws_iam
+        }
+        type Subscription {
+          onStatus(id: ID!): Presence
+          @aws_subscribe(mutations: ["connect", "disconnected"])
+        }
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/Schema
+  PresenceAPIheartbeatDSServiceRole8F401150:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/heartbeatDS/ServiceRole/Resource
+  PresenceAPIheartbeatDSServiceRoleDefaultPolicy04B94A47:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - heartbeat8A8E5472
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: PresenceAPIheartbeatDSServiceRoleDefaultPolicy04B94A47
+      Roles:
+        - Ref: PresenceAPIheartbeatDSServiceRole8F401150
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/heartbeatDS/ServiceRole/DefaultPolicy/Resource
+  PresenceAPIheartbeatDS73E9B382:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      Name: heartbeatDS
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn:
+          Fn::GetAtt:
+            - heartbeat8A8E5472
+            - Arn
+      ServiceRoleArn:
+        Fn::GetAtt:
+          - PresenceAPIheartbeatDSServiceRole8F401150
+          - Arn
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/heartbeatDS/Resource
+  PresenceAPIheartbeatDSQueryheartbeatResolver5E0CB2B3:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      FieldName: heartbeat
+      TypeName: Query
+      DataSourceName: heartbeatDS
+      Kind: UNIT
+    DependsOn:
+      - PresenceAPIheartbeatDS73E9B382
+      - PresenceAPISchemaB664B62D
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/heartbeatDS/QueryheartbeatResolver/Resource
+  PresenceAPIheartbeatDSMutationconnectResolver537D2CEA:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      FieldName: connect
+      TypeName: Mutation
+      DataSourceName: heartbeatDS
+      Kind: UNIT
+    DependsOn:
+      - PresenceAPIheartbeatDS73E9B382
+      - PresenceAPISchemaB664B62D
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/heartbeatDS/MutationconnectResolver/Resource
+  PresenceAPIstatusDSServiceRole1B0479EF:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/statusDS/ServiceRole/Resource
+  PresenceAPIstatusDSServiceRoleDefaultPolicy0C979BD8:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - status13EA9EF7
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: PresenceAPIstatusDSServiceRoleDefaultPolicy0C979BD8
+      Roles:
+        - Ref: PresenceAPIstatusDSServiceRole1B0479EF
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/statusDS/ServiceRole/DefaultPolicy/Resource
+  PresenceAPIstatusDSD3865C08:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      Name: statusDS
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn:
+          Fn::GetAtt:
+            - status13EA9EF7
+            - Arn
+      ServiceRoleArn:
+        Fn::GetAtt:
+          - PresenceAPIstatusDSServiceRole1B0479EF
+          - Arn
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/statusDS/Resource
+  PresenceAPIstatusDSQuerystatusResolver0F8E4FA8:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      FieldName: status
+      TypeName: Query
+      DataSourceName: statusDS
+      Kind: UNIT
+    DependsOn:
+      - PresenceAPISchemaB664B62D
+      - PresenceAPIstatusDSD3865C08
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/statusDS/QuerystatusResolver/Resource
+  PresenceAPIdisconnectDSServiceRoleE16B55D6:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: appsync.amazonaws.com
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectDS/ServiceRole/Resource
+  PresenceAPIdisconnectDSServiceRoleDefaultPolicyE246A046:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - disconnect829B70D0
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: PresenceAPIdisconnectDSServiceRoleDefaultPolicyE246A046
+      Roles:
+        - Ref: PresenceAPIdisconnectDSServiceRoleE16B55D6
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectDS/ServiceRole/DefaultPolicy/Resource
+  PresenceAPIdisconnectDS924FC7F3:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      Name: disconnectDS
+      Type: AWS_LAMBDA
+      LambdaConfig:
+        LambdaFunctionArn:
+          Fn::GetAtt:
+            - disconnect829B70D0
+            - Arn
+      ServiceRoleArn:
+        Fn::GetAtt:
+          - PresenceAPIdisconnectDSServiceRoleE16B55D6
+          - Arn
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectDS/Resource
+  PresenceAPIdisconnectDSMutationdisconnectResolverA809BE03:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      FieldName: disconnect
+      TypeName: Mutation
+      DataSourceName: disconnectDS
+      Kind: UNIT
+    DependsOn:
+      - PresenceAPIdisconnectDS924FC7F3
+      - PresenceAPISchemaB664B62D
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectDS/MutationdisconnectResolver/Resource
+  PresenceAPIdisconnectedDS28B6D0E3:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      Name: disconnectedDS
+      Type: NONE
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectedDS/Resource
+  PresenceAPIdisconnectedDSMutationdisconnectedResolver9E27C20C:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId:
+        Fn::GetAtt:
+          - PresenceAPI097D0E1D
+          - ApiId
+      FieldName: disconnected
+      TypeName: Mutation
+      DataSourceName: disconnectedDS
+      Kind: UNIT
+      RequestMappingTemplate: "
+
+        \            {
+
+        \                \"version\": \"2017-02-28\",
+
+        \                \"payload\": {
+
+        \                    \"id\": \"$context.arguments.id\",
+
+        \                    \"status\": \"offline\"
+
+        \                }
+
+        \            }
+
+        \        "
+      ResponseMappingTemplate: "
+
+        \            $util.toJson($context.result)
+
+        \        "
+    DependsOn:
+      - PresenceAPIdisconnectedDS28B6D0E3
+      - PresenceAPISchemaB664B62D
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceAPI/disconnectedDS/MutationdisconnectedResolver/Resource
+  PresenceBus5D952912:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: PresenceApiStackPresenceBus7A70F491
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceBus/Resource
+  PresenceTimeoutRuleFC1C372B:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: cron(* * * * ? *)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - timeoutD1A38E79
+              - Arn
+          Id: Target0
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceTimeoutRule/Resource
+  PresenceTimeoutRuleAllowEventRulePresenceApiStacktimeout1089E917861673E1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - timeoutD1A38E79
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - PresenceTimeoutRuleFC1C372B
+          - Arn
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceTimeoutRule/AllowEventRulePresenceApiStacktimeout1089E917
+  PresenceDisconnectRule61912715:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Rule for presence disconnection
+      EventBusName:
+        Ref: PresenceBus5D952912
+      EventPattern:
+        detail-type:
+          - presence.disconnected
+        source:
+          - api.presence
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - ondisconnect006B6FED
+              - Arn
+          Id: Target0
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceDisconnectRule/Resource
+  PresenceDisconnectRuleAllowEventRulePresenceApiStackondisconnectD6D10CE158F0B502:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - ondisconnect006B6FED
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - PresenceDisconnectRule61912715
+          - Arn
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceDisconnectRule/AllowEventRulePresenceApiStackondisconnectD6D10CE1
+  eventsEndPointSG1AD6A545:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: EventBridge interface endpoint SG
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp:
+            Fn::GetAtt:
+              - PresenceVPC5404FC46
+              - CidrBlock
+          Description:
+            Fn::Join:
+              - ""
+              - - "from "
+                - Fn::GetAtt:
+                    - PresenceVPC5404FC46
+                    - CidrBlock
+                - :443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId:
+        Ref: PresenceVPC5404FC46
+    Metadata:
+      aws:cdk:path: PresenceApiStack/eventsEndPointSG/Resource
+  eventsEndPointSGfromPresenceApiStacklambdaSg8EC30D15803C8A1C8F:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      Description: from PresenceApiStacklambdaSg8EC30D15:80
+      FromPort: 80
+      GroupId:
+        Fn::GetAtt:
+          - eventsEndPointSG1AD6A545
+          - GroupId
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - lambdaSgD8D93E20
+          - GroupId
+      ToPort: 80
+    Metadata:
+      aws:cdk:path: PresenceApiStack/eventsEndPointSG/from PresenceApiStacklambdaSg8EC30D15:80
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAAE31Ry27CMBD8Fu7GQPiBAm0REmrTpOK+OAsYEtv12lQoyr/XNijApaedmX14vDvhk8mUjwcv8EtDUZ1GrdAWeVs6ECdWIGlvBbIZEbqg7aXas4VW5KwXji12KgcLDTq0kXx6Z3yS+86AQ30lndSqY/GVFkXG240RMbfJFyy38gwOS79VmJrvqNDe4Tdsa7zrdy240kJCHM1WKnjYgcAw+E1VRkvlbg/0tEThrXSXpdXepIH/Ciu1t0jUMayBnBQgDmEzvY++qUBTh2y0kbSO1dBsK+DtGi5oN2gpOgyVT/zdK+FuiUeco20kUdoXTYcQV088XSBwPvfihG4OhExCw9tCX5eTYq6Dk0uaklDYuDF0UYK3Swvm8FPPjIzpxL7Wz6wMH2yArZP7V3BQ9jd8YPG09fl68B5/aIX3mrCyM6rgun2Lce4pFve48DfLIXZdx5SukB9pdJ5kPBvzbHAkKYfWKycb5MU1/gHzxfE/qgIAAA==
+    Metadata:
+      aws:cdk:path: PresenceApiStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Parameters:
+  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3BucketF32DAE3E:
+    Type: String
+    Description: S3 bucket for asset "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
+  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4:
+    Type: String
+    Description: S3 key for asset version "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
+  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aArtifactHash48E6EA6B:
+    Type: String
+    Description: Artifact hash for asset "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
+  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3Bucket879FCA84:
+    Type: String
+    Description: S3 bucket for asset "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
+  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED:
+    Type: String
+    Description: S3 key for asset version "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
+  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eArtifactHash1C94CB72:
+    Type: String
+    Description: Artifact hash for asset "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
+  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3Bucket1FBE7F78:
+    Type: String
+    Description: S3 bucket for asset "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
+  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872:
+    Type: String
+    Description: S3 key for asset version "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
+  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588ArtifactHash0AF6E6B7:
+    Type: String
+    Description: Artifact hash for asset "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
+  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3Bucket604DC603:
+    Type: String
+    Description: S3 bucket for asset "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
+  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08:
+    Type: String
+    Description: S3 key for asset version "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
+  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dArtifactHash4720A902:
+    Type: String
+    Description: Artifact hash for asset "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
+  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3Bucket3CC2E988:
+    Type: String
+    Description: S3 bucket for asset "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
+  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63:
+    Type: String
+    Description: S3 key for asset version "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
+  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cArtifactHash2A5AB5DC:
+    Type: String
+    Description: Artifact hash for asset "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
+  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3Bucket7E4533C9:
+    Type: String
+    Description: S3 bucket for asset "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
+  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51:
+    Type: String
+    Description: S3 key for asset version "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
+  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2ArtifactHash1DF3328D:
+    Type: String
+    Description: Artifact hash for asset "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
+Outputs:
+  presenceapi:
+    Description: Presence api endpoint
+    Value:
+      Fn::GetAtt:
+        - PresenceAPI097D0E1D
+        - GraphQLUrl
+    Export:
+      Name: presenceEndpoint
+  region:
+    Description: Presence api region
+    Value: us-east-1
+    Export:
+      Name: region
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+
