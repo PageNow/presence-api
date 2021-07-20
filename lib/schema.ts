@@ -32,12 +32,16 @@ export const PresenceSchema = (): AppSync.Schema => {
     });
     const requiredStatus = typeFromObject(status, { isRequired: true });
 
+    // JSON string of url and page title (i.e. "string!")
+    const requiredPage = AppSync.GraphqlType.string({ isRequired: true });
+
     const presence = new AppSync.ObjectType("Presence",{
         definition: {
-            id: requiredId,
-            status: requiredStatus
+            userUuid: requiredId,
+            status: requiredStatus,
+            page: requiredPage
         },
-        directives: [AppSync.Directive.iam(), AppSync.Directive.apiKey()]
+        directives: [AppSync.Directive.custom('@aws_cognito_user_pools'), AppSync.Directive.iam()] //, AppSync.Directive.apiKey()]
     });
     const returnPresence = typeFromObject(presence);
 
@@ -48,25 +52,32 @@ export const PresenceSchema = (): AppSync.Schema => {
     // Add queries to the schema
     schema.addQuery("heartbeat", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId }
+        args: {
+            userUuid: requiredId,
+            page: requiredPage
+        }
     }));
     schema.addQuery("status", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId }
+        args: {
+            userUuid: requiredId,
+        }
     }));
 
     // Add mutations to the schema
     schema.addMutation("connect", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId }
+        args: {
+            page: requiredPage
+        }
     }));
     schema.addMutation("disconnect", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId }
+        args: { }
     }));
     schema.addMutation("disconnected", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId },
+        args: { },
         directives: [ AppSync.Directive.iam() ]
     }));
 
@@ -79,3 +90,9 @@ export const PresenceSchema = (): AppSync.Schema => {
 
     return schema;
 };
+
+/**
+ * References
+ * 
+ * https://github.com/aws/aws-cdk/issues/12981
+ */

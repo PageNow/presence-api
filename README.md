@@ -35,6 +35,15 @@ cd redis-docker
 docker-compose up -d
 ```
 
+### Invoke Lambda Functions
+
+Run ```cdk synth --no-staging > template.yaml``` to generate template.yaml.
+
+Check the function identifier from template.yaml and run
+```shell
+/usr/local/bin/sam local invoke [FunctionIdentifier] -e events/[event.json]
+```
+
 ## TODO
 
 [] Change authorization to COGNITO
@@ -48,3 +57,7 @@ docker-compose up -d
 ### Local testing
 
 * https://github.com/aws/aws-sam-cli/issues/318#issuecomment-377770815
+
+## Questions
+
+* Does AppSync verify JWT token? If not, we have to verify manually on Lambda functions... (assume they verify JWT token for now)

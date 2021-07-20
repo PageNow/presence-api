@@ -8,6 +8,7 @@ import * as Lambda from '@aws-cdk/aws-lambda';
 import * as AppSync from '@aws-cdk/aws-appsync';
 import * as AwsEvents from '@aws-cdk/aws-events';
 import * as AwsEventsTargets from '@aws-cdk/aws-events-targets';
+import * as Cognito from '@aws-cdk/aws-cognito';
 
 import { PresenceSchema } from "./schema";
 
@@ -185,6 +186,11 @@ export class PresenceApiStack extends CDK.Stack {
         this.addFunction("on_disconnect", false);
 
         /**
+         * Retrieve existing user pool
+         */
+        const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', 'us-east-1_014HGnyeu');
+
+        /**
          * GraphQL API
          */
         this.api = new AppSync.GraphqlApi(this, "PresenceAPI", {
@@ -192,14 +198,20 @@ export class PresenceApiStack extends CDK.Stack {
             authorizationConfig: {
                 // TODO: change to COGNITO                
                 defaultAuthorization: {
-                    authorizationType: AppSync.AuthorizationType.API_KEY,
-                    apiKeyConfig: {
-                        name: "PresenceKey",
-                        expires: CDK.Expiration.after(CDK.Duration.days(2))
+                    authorizationType: AppSync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: userPool
                     }
                 },
                 additionalAuthorizationModes: [
-                    { authorizationType: AppSync.AuthorizationType.IAM }
+                    { authorizationType: AppSync.AuthorizationType.IAM },
+                    // {
+                    //     authorizationType: AppSync.AuthorizationType.API_KEY,
+                    //     apiKeyConfig: {
+                    //         name: "PresenceKey",
+                    //         expires: CDK.Expiration.after(CDK.Duration.days(7))
+                    //     }
+                    // }
                 ]
             },
             schema: PresenceSchema(),
@@ -320,11 +332,11 @@ export class PresenceApiStack extends CDK.Stack {
             description: "Presence api endpoint",
             exportName: "presenceEndpoint"
         });
-        new CDK.CfnOutput(this, "api-key", {
-            value: this.api.apiKey || '',
-            description: "Presence api key",
-            exportName: "apiKey"
-        });
+        // new CDK.CfnOutput(this, "api-key", {
+        //     value: this.api.apiKey || '',
+        //     description: "Presence api key",
+        //     exportName: "apiKey"
+        // });
         new CDK.CfnOutput(this, "region", {
             value: process.env.CDK_DEFAULT_REGION || '',
             description: "Presence api region",

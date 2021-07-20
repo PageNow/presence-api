@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-appsync": "^1.113.0",
+    "@aws-cdk/aws-cognito": "^1.113.0",
     "@aws-cdk/aws-ec2": "^1.113.0",
     "@aws-cdk/aws-elasticache": "^1.113.0",
     "@aws-cdk/aws-events": "^1.113.0",
