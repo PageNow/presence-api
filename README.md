@@ -1,6 +1,16 @@
 # presence-api
 API for presence information
 
+## Architecture
+
+### REDIS
+
+* We need to use two REDIS clients - one (presence) for storing { userId: timestamp } and one (status) for storing { userId: pageInfo } where pageInfo is a stringified JSON of { url: string, title: string }
+
+### Event Flow
+
+* Every minute, AWS Events calls timeout lambda function, which is put as an EventBridge event, which calls on_disconnect lambda function. 
+
 ## CDK Bootstrap
 
 ```shell

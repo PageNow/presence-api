@@ -23,44 +23,49 @@ export const PresenceSchema = (): AppSync.Schema => {
     // Instantiate the schema
     const schema = new AppSync.Schema();
 
+    // AppSync response (presence) is consisted of userId, status (offline, online),
+    // url, and title.
+    // In redis_presence, {userId: timestamp} is saved.
+    // In redis_status, stringified JSON of {userId: "{url: '', title: ''}"} is saved.
+
     // A required ID type "ID!"
     const requiredId = AppSync.GraphqlType.id({ isRequired: true });
 
-    // User defined types: enum for presence state and required version (i.e. "status!")
+    // User defined types: enum for presence state, and required version (i.e. "status!")
     const status = new AppSync.EnumType("Status", {
         definition: ["online", "offline"]
     });
-    const requiredStatus = typeFromObject(status, { isRequired: true });
+    const requiredStatus = typeFromObject(status, {isRequired: true});
 
-    // JSON string of url and page title (i.e. "string!")
-    const requiredPage = AppSync.GraphqlType.string({ isRequired: true });
+    const requiredUrl = AppSync.GraphqlType.string({ isRequired: true });
+    const requiredTitle = AppSync.GraphqlType.string({ isRequired: true });
 
     const presence = new AppSync.ObjectType("Presence",{
         definition: {
-            userUuid: requiredId,
+            userId: requiredId,
             status: requiredStatus,
-            page: requiredPage
+            url: requiredUrl,
+            title: requiredTitle
         },
         directives: [AppSync.Directive.custom('@aws_cognito_user_pools'), AppSync.Directive.iam()] //, AppSync.Directive.apiKey()]
     });
     const returnPresence = typeFromObject(presence);
 
     // Add types to the schema
-    schema.addType(status);
     schema.addType(presence);
 
     // Add queries to the schema
     schema.addQuery("heartbeat", new AppSync.Field({
         returnType: returnPresence,
         args: {
-            userUuid: requiredId,
-            page: requiredPage
+            url: requiredUrl,
+            title: requiredTitle
         }
     }));
     schema.addQuery("status", new AppSync.Field({
         returnType: returnPresence,
         args: {
-            userUuid: requiredId,
+            userId: requiredId
         }
     }));
 
@@ -68,7 +73,8 @@ export const PresenceSchema = (): AppSync.Schema => {
     schema.addMutation("connect", new AppSync.Field({
         returnType: returnPresence,
         args: {
-            page: requiredPage
+            url: requiredUrl,
+            title: requiredTitle   
         }
     }));
     schema.addMutation("disconnect", new AppSync.Field({
@@ -84,7 +90,7 @@ export const PresenceSchema = (): AppSync.Schema => {
     // Add subscription to the schema
     schema.addSubscription("onStatus", new AppSync.Field({
         returnType: returnPresence,
-        args: { id: requiredId },
+        args: { userId: requiredId },
         directives: [ AppSync.Directive.subscribe("connect", "disconnected") ]
     }));
 
