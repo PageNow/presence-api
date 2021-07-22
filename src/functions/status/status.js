@@ -13,6 +13,7 @@ const hget = promisify(redisPresence.hget).bind(redisPresence);
  * 
  * 1. Check `arguments.userId` from the event
  * 2. Calls zscore to check the presence of the id
+ * 3. Calls hget to get the page info of the id
  */
 exports.handler = async function(event) {
     const userId = event && event.arguments && event.arguments.userId;

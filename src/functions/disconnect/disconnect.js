@@ -4,10 +4,11 @@ const eventBridge = new AWS.EventBridge();
 
 const redis = require('redis');
 const eventBus = process.env.EVENT_BUS;
-const redisEndpoint = process.env.REDIS_HOST || 'locahost';
-const redisPort = process.env.REDIS_PORT || 6379;
-const presence = redis.createClient(redisPort, redisEndpoint);
-const zrem = promisify(presence.zrem).bind(presence);
+const redisPresenceEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPresencePort = process.env.REDIS_PORT || 6379;
+const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
+const zrem = promisify(presence.zrem).bind(redisPresence);
+const hdel = promisify(presence.hdel).bind(redisPresence);
 
 /**
  * Disconnect handler
@@ -17,18 +18,21 @@ const zrem = promisify(presence.zrem).bind(presence);
  * 3. Send an event if the id was still online.
  */
 exports.handler = async function(event) {
-    const id = event && event.arguments && event.arguments.id;
-    if (id === undefined || id === null) {
-        throw new Error("Missing argument 'id'");
+    const decodedJwt = jwt.decode(event.request.headers.authorization, { complete: true });
+    if (decodedJwt.payload.iss !== 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_014HGnyeu') {
+        throw new Error("Authorization failed");
     }
+    const userId = decodedJwt.payload.username;
+
     try {
-        const removals = await zrem("presence", id);
+        const removals = await zrem("status", userId);
+        await hdel("page", userId);
         if (removals != 1) { // if id is already removed, then bypass event
-            return { id, status: "offline" };
+            return { userId, url: "", title: "", status: "offline" };
         }
         const Entries = [
             {
-                Detail: JSON.stringify({ id }),
+                Detail: JSON.stringify({ userId }),
                 DetailType: "presence.disconnected",
                 Source: "api.presence",
                 EventBusName: eventBus,
@@ -36,7 +40,7 @@ exports.handler = async function(event) {
             }
         ];
         await eventBridge.putEvents({ Entries }).promise();
-        return { id, status: "offline" };
+        return { userId, url: "", title: "", status: "offline" };
     } catch (error) {
         return error;
     }

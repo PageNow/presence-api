@@ -28,10 +28,10 @@ export class PresenceApiStack extends CDK.Stack {
 
     private vpc: EC2.Vpc;
     private lambdaSG: EC2.SecurityGroup;
-    private redisPresenceCluster: ElasticCache.CfnReplicationGroup;
+    private redisCluster: ElasticCache.CfnReplicationGroup;
     // private redisStatusCluster: ElasticCache.CfnReplicationGroup;
     private redisLayer: Lambda.LayerVersion;
-    private redisPresencePort: number = 6379;
+    private redisPort: number = 6379;
     // private redisStatusPort: number = 6380;
     readonly api: AppSync.GraphqlApi;
 
@@ -62,9 +62,9 @@ export class PresenceApiStack extends CDK.Stack {
         if (useRedis) {
             fn.addLayers(this.redisLayer);
             fn.addEnvironment("REDIS_PRESENCE_HOST",
-                this.redisPresenceCluster.attrPrimaryEndPointAddress);
+                this.redisCluster.attrPrimaryEndPointAddress);
             fn.addEnvironment("REDIS_PRESENCE_PORT",
-                this.redisPresenceCluster.attrPrimaryEndPointPort);
+                this.redisCluster.attrPrimaryEndPointPort);
             // fn.addEnvironment("REDIS_STATUS_HOST",
             //     this.redisStatusCluster.attrPrimaryEndPointAddress);
             // fn.addEnvironment("REDIS_STATUS_PORT",
@@ -127,7 +127,7 @@ export class PresenceApiStack extends CDK.Stack {
                 // Subnet group for REDIS_PRESENCE
                 {
                     cidrMask: 24,
-                    name: "RedisPresence",
+                    name: "Redis",
                     subnetType: EC2.SubnetType.ISOLATED
                 },
                 // Subnet group for REDIS_STATUS
@@ -151,7 +151,7 @@ export class PresenceApiStack extends CDK.Stack {
          * 2. Redis status cluster
          * 3. Lambda functions
          */
-        const redisPresenceSG = new EC2.SecurityGroup(this, "redisPresenceSG", {
+        const redisSG = new EC2.SecurityGroup(this, "redisSG", {
             vpc: this.vpc,
             description: "Security group for REDIS Presence Cluster"
         });
@@ -164,9 +164,9 @@ export class PresenceApiStack extends CDK.Stack {
             description: "Security group for Lambda functions"
         });
         // REDIS SG accepts TCP connections from the Lambda SG on Redis port.
-        redisPresenceSG.addIngressRule(
+        redisSG.addIngressRule(
             this.lambdaSG,
-            EC2.Port.tcp(this.redisPresencePort)
+            EC2.Port.tcp(this.redisPort)
         );
         // redisStatusSG.addIngressRule(
         //     this.lambdaSG,
@@ -180,21 +180,21 @@ export class PresenceApiStack extends CDK.Stack {
          * So props like `cacheSubnetGroupName` have misleading names and require a name 
          * in CloudFormation sense, which is actually a "ref" for reference.
          */
-        const redisPresenceSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisPresenceSubnets", {
-            cacheSubnetGroupName: "RedisPresenceSubnets",
+        const redisSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisSubnets", {
+            cacheSubnetGroupName: "RedisSubnets",
             description: "Subnet Group for Redis Presence Cluster",
-            subnetIds: this.vpc.selectSubnets({ subnetGroupName: "RedisPresence" }).subnetIds
+            subnetIds: this.vpc.selectSubnets({ subnetGroupName: "Redis" }).subnetIds
         });
-        this.redisPresenceCluster = new ElasticCache.CfnReplicationGroup(this, "PresenceCluster", {
+        this.redisCluster = new ElasticCache.CfnReplicationGroup(this, "PresenceCluster", {
             replicationGroupDescription: "PresenceReplicationGroup",
             cacheNodeType: "cache.t3.small",
             engine: "redis",
             numCacheClusters: 2,
             automaticFailoverEnabled: true,
             multiAzEnabled: true,
-            cacheSubnetGroupName: redisPresenceSubnets.ref,
-            securityGroupIds: [redisPresenceSG.securityGroupId],
-            port: this.redisPresencePort
+            cacheSubnetGroupName: redisSubnets.ref,
+            securityGroupIds: [redisSG.securityGroupId],
+            port: this.redisPort
         });
         
         // const redisStatusSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisStatusSubnets", {
@@ -248,7 +248,7 @@ export class PresenceApiStack extends CDK.Stack {
                     }
                 },
                 additionalAuthorizationModes: [
-                    { authorizationType: AppSync.AuthorizationType.IAM },
+                    { authorizationType: AppSync.AuthorizationType.IAM }
                     // {
                     //     authorizationType: AppSync.AuthorizationType.API_KEY,
                     //     apiKeyConfig: {
@@ -279,7 +279,12 @@ export class PresenceApiStack extends CDK.Stack {
         const requestMappingTemplate = AppSync.MappingTemplate.fromString(`
             {
                 "version": "2017-02-28",
-                "payload": { }
+                "payload": {
+                    "userId": ""
+                    "status": "offline",
+                    "url": "",
+                    "title": ""
+                }
             }
         `);
         const responseMappingTemplate = AppSync.MappingTemplate.fromString(`
