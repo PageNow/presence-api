@@ -25,7 +25,7 @@ const gqlClient = new AppSyncClient(config);
 
 // Query is the same for all calls
 const disconnected = gql`
-    mutation disconnected($userId: string!) {
+    mutation disconnected($userId: ID!) {
         disconnected(userId: $userId) {
             userId
             status

@@ -29,8 +29,7 @@ describe('GraphQLAPI and Stack Output', () => {
 describe("Checking GraphQL schema", () => {
     const definition = Capture.aString();
     const testNoSpaces = (s: string) => () => {
-        const expr = s.replace(/\s+/g,'\\s*')
-          .replace(/([()\[\]])/g,'\\$1');
+        const expr = s.replace(/\s+/g,'\\s*').replace(/([()\[\]])/g,'\\$1');
         expect(definition.capturedValue).toMatch(new RegExp(expr));
     };
 
@@ -46,25 +45,32 @@ describe("Checking GraphQL schema", () => {
         subscription: Subscription
     }`));
 
-    test("Status enum", testNoSpaces(`type Presence @aws_iam @aws_api_key {
-        id: ID!
+    test("Status enum", testNoSpaces(`enum Status {
+        online
+        offline
+    }`));
+
+    test("Presence type", testNoSpaces(`type Presence @aws_cognito_user_pools @aws_iam {
+        userId: ID!
         status: Status!
+        url: String!
+        title: String!
     }`));
 
     test("Queries", testNoSpaces(`type Query {
-        heartbeat(id: ID!): Presence
-        status(id: ID!): Presence
+        heartbeat(url: String! title: String!): Presence
+        status(userId: ID!): Presence
     }`));
 
     test("Mutations", testNoSpaces(`type Mutation {
-        connect(id: ID!): Presence
-        disconnect(id: ID!): Presence
-        disconnected(id: ID!): Presence
+        connect(url: String! title: String!): Presence
+        disconnect: Presence
+        disconnected(userId: ID!): Presence
         @aws_iam
     }`));
 
     test("Subscriptions", testNoSpaces(`type Subscription {
-        onStatus(id: ID!): Presence
+        onStatus(userId: ID!): Presence
         @aws_subscribe(mutations: [\"connect\", \"disconnected\"])
     }`));
 });

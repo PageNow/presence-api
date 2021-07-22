@@ -29,7 +29,7 @@ export const PresenceSchema = (): AppSync.Schema => {
     // In redis_status, stringified JSON of {userId: "{url: '', title: ''}"} is saved.
 
     // A required ID type "ID!"
-    const requiredId = AppSync.GraphqlType.string({ isRequired: true });
+    const requiredId = AppSync.GraphqlType.id({ isRequired: true });
 
     // User defined types: enum for presence state, and required version (i.e. "status!")
     const status = new AppSync.EnumType("Status", {
@@ -79,8 +79,7 @@ export const PresenceSchema = (): AppSync.Schema => {
         }
     }));
     schema.addMutation("disconnect", new AppSync.Field({
-        returnType: returnPresence,
-        args: { }
+        returnType: returnPresence
     }));
     schema.addMutation("disconnected", new AppSync.Field({
         returnType: returnPresence,

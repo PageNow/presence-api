@@ -151,9 +151,9 @@ export class PresenceApiStack extends CDK.Stack {
          * 2. Redis status cluster
          * 3. Lambda functions
          */
-        const redisSG = new EC2.SecurityGroup(this, "redisSG", {
+        const redisSG = new EC2.SecurityGroup(this, "redisSg", {
             vpc: this.vpc,
-            description: "Security group for REDIS Presence Cluster"
+            description: "Security group for Redis Cluster"
         });
         // const redisStatusSG = new EC2.SecurityGroup(this, "redisStatusSG", {
         //     vpc: this.vpc,
@@ -182,7 +182,7 @@ export class PresenceApiStack extends CDK.Stack {
          */
         const redisSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisSubnets", {
             cacheSubnetGroupName: "RedisSubnets",
-            description: "Subnet Group for Redis Presence Cluster",
+            description: "Subnet Group for Redis Cluster",
             subnetIds: this.vpc.selectSubnets({ subnetGroupName: "Redis" }).subnetIds
         });
         this.redisCluster = new ElasticCache.CfnReplicationGroup(this, "PresenceCluster", {
@@ -280,7 +280,7 @@ export class PresenceApiStack extends CDK.Stack {
             {
                 "version": "2017-02-28",
                 "payload": {
-                    "userId": ""
+                    "userId": "$context.arguments.userId"
                     "status": "offline",
                     "url": "",
                     "title": ""
