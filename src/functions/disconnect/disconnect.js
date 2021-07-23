@@ -1,14 +1,15 @@
 const { promisify } = require('util');
 const AWS = require('aws-sdk');
 const eventBridge = new AWS.EventBridge();
+const jwt = require('jsonwebtoken');
 
 const redis = require('redis');
 const eventBus = process.env.EVENT_BUS;
-const redisPresenceEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
-const zrem = promisify(presence.zrem).bind(redisPresence);
-const hdel = promisify(presence.hdel).bind(redisPresence);
+const zrem = promisify(redisPresence.zrem).bind(redisPresence);
+const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
 /**
  * Disconnect handler
@@ -42,6 +43,7 @@ exports.handler = async function(event) {
         await eventBridge.putEvents({ Entries }).promise();
         return { userId, url: "", title: "", status: "offline" };
     } catch (error) {
+        console.log(error);
         return error;
     }
 }

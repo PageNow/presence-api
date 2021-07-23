@@ -1,8 +1,9 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
+const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 
-const redisPresenceEndpoint = process.env.REDIS_HOST || 'locahost';
+const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 
@@ -34,6 +35,7 @@ exports.handler = async function(event) {
         throw new Error("Authorization failed");
     }
     const userId = decodedJwt.payload.username;
+    console.log(userId);
 
     const commands = redisPresence.multi();
     commands.zadd('status', Date.now(), userId);
@@ -41,11 +43,11 @@ exports.handler = async function(event) {
     const execute = promisify(commands.exec).bind(commands);
 
     try {
-        // const status = await zadd("status", Date.now(), userId);
-        // if (result === 1)  { // New connection
+        const [result, _] = await execute();
+        // if (result == 1) { // New connection. 0 if not updated
         //     await eventBridge.putEvents({
         //         Entries: [{
-        //             Detail: JSON.stringify({ id }),
+        //             Detail: JSON.stringify({ userId }),
         //             DetailType: "presence.connected",
         //             Source: "api.presence",
         //             EventBusName: eventBus,
@@ -53,15 +55,9 @@ exports.handler = async function(event) {
         //         }]
         //     }).promise();
         // }
-        // await hset("page", JSON.stringify({url: url, title: title}))
-
-        const [result, _] = await execute();
-        if (result) {
-            return { userId, url, title, status: "online" };
-        } else {
-            throw new Error("Something went wrong");
-        }
+        return { userId, url, title, status: "online" };
     } catch (error) {
+        console.log(error);
         return error;
     }
 }

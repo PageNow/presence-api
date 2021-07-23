@@ -44,7 +44,7 @@ const disconnected = gql`
 exports.handler = async function(event) {
     const userId = event && event.detail && event.detail.userId;
     if (userId === undefined || userId === null) {
-        throw new Error("Missing argument 'id'");
+        throw new Error("Missing argument 'userId'");
     }
 
     try {
@@ -54,6 +54,7 @@ exports.handler = async function(event) {
         });
         return result.data.disconnected;
     } catch (error) {
+        console.log(error);
         return error;
     }
 }

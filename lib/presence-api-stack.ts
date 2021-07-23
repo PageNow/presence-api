@@ -61,9 +61,9 @@ export class PresenceApiStack extends CDK.Stack {
         });
         if (useRedis) {
             fn.addLayers(this.redisLayer);
-            fn.addEnvironment("REDIS_PRESENCE_HOST",
+            fn.addEnvironment("REDIS_HOST",
                 this.redisCluster.attrPrimaryEndPointAddress);
-            fn.addEnvironment("REDIS_PRESENCE_PORT",
+            fn.addEnvironment("REDIS_PORT",
                 this.redisCluster.attrPrimaryEndPointPort);
             // fn.addEnvironment("REDIS_STATUS_HOST",
             //     this.redisStatusCluster.attrPrimaryEndPointAddress);
@@ -280,7 +280,7 @@ export class PresenceApiStack extends CDK.Stack {
             {
                 "version": "2017-02-28",
                 "payload": {
-                    "userId": "$context.arguments.userId"
+                    "userId": "$context.arguments.userId",
                     "status": "offline",
                     "url": "",
                     "title": ""
@@ -302,7 +302,7 @@ export class PresenceApiStack extends CDK.Stack {
         const presenceBus = new AwsEvents.EventBus(this, "PresenceBus");
         // Rule to trigger lambda timeout every minute
         new AwsEvents.Rule(this, "PresenceTimeoutRule", {
-            schedule: AwsEvents.Schedule.cron({ minute: "*" }),
+            schedule: AwsEvents.Schedule.cron({ hour: "*" }),
             targets: [ new AwsEventsTargets.LambdaFunction(this.getFn("timeout")) ],
             enabled: true
         });

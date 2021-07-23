@@ -2,8 +2,8 @@ const redis = require('redis');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 
-const redisPresenceEndpoint = process.env.REDIS_PRESENCE_HOST || 'host.docker.internal';
-const redisPresencePort = process.env.REDIS_PRESENCE_PORT || 6379;
+const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
+const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const zscore = promisify(redisPresence.zscore).bind(redisPresence);
 const hget = promisify(redisPresence.hget).bind(redisPresence);
@@ -18,7 +18,7 @@ const hget = promisify(redisPresence.hget).bind(redisPresence);
 exports.handler = async function(event) {
     const userId = event && event.arguments && event.arguments.userId;
     if (userId === undefined || userId === null) {
-        throw new Error("Missing argument 'id'");
+        throw new Error("Missing argument 'userId'");
     }
 
     const decodedJwt = jwt.decode(event.request.headers.authorization, { complete: true });
@@ -31,15 +31,21 @@ exports.handler = async function(event) {
     try {
         const status = await zscore("status", userId);
         const pageStr = await hget("page", userId);
-        const page = JSON.parse(pageStr)
+        let url = '', title = '';
+        if (pageStr) {
+            const page = JSON.parse(pageStr);
+            url = page.url;
+            title = page.title;
+        }
 
         return {
             userId: userId,
             status: status ? "online" : "offline",
-            url: page.url,
-            title: page.title
+            url: status ? url : "",
+            title: status ? title: ""
         };
     } catch (error) {
+        console.log(error);
         return error;
     }
 }

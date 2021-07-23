@@ -20,20 +20,20 @@ const eventBridge = new AWS.EventBridge();
 exports.handler = async function() {
     const timestamp = Date.now() - timeout;
     const commands = redisPresence.multi();
-    commands.zrangebyscore("presence", "-inf", timestamp);
-    commands.zremrangebyscore("presence", "-inf", timestamp);
+    commands.zrangebyscore("status", "-inf", timestamp);
+    commands.zremrangebyscore("status", "-inf", timestamp);
     const execute = promisify(commands.exec).bind(commands);
     try {
         // Multiple commands results are returned as an array of result, one entry per command
-        // `ids` is the result of the first command
+        // `userIds` is the result of the first command
         const [userIds] = await execute();
-        if (!userIds.length) return { expired: 0 };
+        if (userIds.length === 0) return { expired: 0 };
 
         // putEvents is limited to 10 events per call
         // Create a promise for each batch of ten events ...
         let promises = [];
         while (userIds.length) {
-            const Entries = ids.splice(0, 10).map(userId => {
+            const Entries = userIds.splice(0, 10).map(userId => {
                 return {
                     Detail: JSON.stringify({ userId }),
                     DetailType: "presence.disconnected",
@@ -57,6 +57,7 @@ exports.handler = async function() {
         );
         return { expired, failed };
     } catch (error) {
+        console.log(error);
         return error;
     }
 }
