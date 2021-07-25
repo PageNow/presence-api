@@ -302,7 +302,7 @@ export class PresenceApiStack extends CDK.Stack {
         const presenceBus = new AwsEvents.EventBus(this, "PresenceBus");
         // Rule to trigger lambda timeout every minute
         new AwsEvents.Rule(this, "PresenceTimeoutRule", {
-            schedule: AwsEvents.Schedule.cron({ hour: "*" }),
+            schedule: AwsEvents.Schedule.cron({ minute: "*" }),
             targets: [ new AwsEventsTargets.LambdaFunction(this.getFn("timeout")) ],
             enabled: true
         });

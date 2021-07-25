@@ -11,6 +11,8 @@ API for presence information
 
 * Every minute, AWS Events calls timeout lambda function, which is put as an EventBridge event, which calls on_disconnect lambda function. 
 
+* connect.js will be called when the url changes and on the initial connection. heartbeat.js will be called by the page if it has the same url as the redisUrl.
+
 ## CDK Bootstrap
 
 ```shell

@@ -57,7 +57,11 @@ export const PresenceSchema = (): AppSync.Schema => {
 
     // Add queries to the schema
     schema.addQuery("heartbeat", new AppSync.Field({
-        returnType: returnPresence
+        returnType: returnPresence,
+        args: {
+            url: requiredUrl,
+            title: requiredTitle
+        }
     }));
     schema.addQuery("status", new AppSync.Field({
         returnType: returnPresence,
