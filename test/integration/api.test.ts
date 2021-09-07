@@ -4,9 +4,10 @@ describe("API Integration test", () => {
     const api = new PresenceApi();
     test("Check stack output", () => {
         expect(PresenceApi.getConfig()).toMatchObject({
-            "PresenceStack": {
+            "PresenceApiStack": {
                 "presenceapi": expect.stringMatching(/https:.*\/graphql/),
-                "apikey": expect.stringMatching(/.*/)
+                "apikey": expect.stringMatching(/.*/),
+                "region": expect.stringMatching(/.*/)
             }
         });
     });
@@ -73,7 +74,9 @@ describe("API Integration test", () => {
         });
 
         test("Connect notification", async () => {
+            expect(observePlayer1).toHaveBeenCalledTimes(0);
             await api.connect("player1").then(delay);
+            expect(observePlayer1).toHaveBeenCalledTimes(1);
             expect(observePlayer1).toHaveBeenLastCalledWith(
                 expect.objectContaining({
                     onStatus: expect.objectContaining({

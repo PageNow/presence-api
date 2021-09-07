@@ -70,6 +70,20 @@ Check the function identifier from template.yaml and run
 
 * https://github.com/aws/aws-sam-cli/issues/318#issuecomment-377770815
 
+### APIGateway Websocket
+
+* https://aws.plainenglish.io/setup-api-gateway-websocket-api-with-cdk-c1e58cf3d2be
+* https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigatewayv2-readme.html#websocket-api
+* https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigatewayv2-readme.html#websocket-api
+* https://github.com/aws-samples/simple-websockets-chat-app/blob/master/onconnect/app.js
+
+### VPC Import
+
+* https://bobbyhadz.com/blog/import-existing-vpc-aws-cdk
+
+### Lambda RDS Proxy
+* https://itnext.io/work-with-aws-rds-proxy-9d7e09668080
+
 ## Questions
 
 * Does AppSync verify JWT token? If not, we have to verify manually on Lambda functions... (assume they verify JWT token for now)

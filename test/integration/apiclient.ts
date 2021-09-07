@@ -1,4 +1,5 @@
 require('isomorphic-fetch'); // required for 'aws-appsync'
+import stackData from '../../presence.json';
 
 import * as AWSAppSync from "aws-appsync";
 import gql from "graphql-tag";
@@ -36,23 +37,23 @@ const onChangeStatus = gql`
 
 // client creation
 export default class Api {
-    private static _client: AWSAppSync.AWSAppSyncClient<any>;
-    private static _stackOutput = require("../../presence.json");
-    private static initClient(): AWSAppSync.AWSAppSyncClient<any> {
-        const config: AWSAppSync.AWSAppSyncClientOptions = {
-            url: Api._stackOutput.PresenceStack.presenceapi,
-            region: Api._stackOutput.PresenceStack.region,
-            auth: {
-                type: AWSAppSync.AUTH_TYPE.API_KEY,
-                apiKey: Api._stackOutput.PresenceStack.apikey
-            },
-            disableOffline: true
-        };
-        return new AWSAppSync.AWSAppSyncClient(config);
-    }
+    private static _client : AWSAppSync.AWSAppSyncClient<any>;
+    private static _stackOutput = stackData;
 
     constructor() {
-        if (!Api._client) Api._client = Api.initClient();
+        if (!Api._client) {
+            Api._client = new AWSAppSync.AWSAppSyncClient({
+                url: Api._stackOutput.PresenceApiStack.presenceapi,
+                region: Api._stackOutput.PresenceApiStack.region,
+                auth: {
+                    // type: AWSAppSync.AUTH_TYPE.API_KEY,
+                    // apiKey: Api._stackOutput.PresenceApiStack.apikey
+                    type: AWSAppSync.AUTH_TYPE.AMAZON_COGNITO_USER_POOLS,
+                    jwtToken: ''
+                },
+                disableOffline: true
+            });
+        }
     }
 
     static getConfig() {
