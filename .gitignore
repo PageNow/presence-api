@@ -10,6 +10,5 @@ cdk.context.json
 lib/*.js
 bin/*.js
 test/*/*.js
-*.js
 
 .env

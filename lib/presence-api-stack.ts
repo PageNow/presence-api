@@ -15,8 +15,8 @@ import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations'
 
 import { PresenceSchema } from "./schema";
 import {
-    pagenowVpcId, rdsProxySgId, userPoolId, rdsDBName, rdsDBHost,
-    rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName
+    pagenowVpcId, rdsProxySgId, userPoolId, rdsDBName, rdsDBRoHost, rdsDBRwHost, rdsDBHost,
+    rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName, privateSubnet1Id, privateSubnet2Id
 } from '../stack-consts';
 
 // Interface used as parameter to create resolvers for API
@@ -78,11 +78,12 @@ export class PresenceApiStack extends CDK.Stack {
         }
         if (usePostgres) {
             fn.addEnvironment("DB_USER", rdsDBUser!);
-            fn.addEnvironment("DB_HOST", rdsDBHost!);
+            fn.addEnvironment("DB_RW_HOST", rdsDBRwHost!);
+            fn.addEnvironment("DB_RO_HOST", rdsDBRoHost!);
             fn.addEnvironment("DB_DATABASE", rdsDBName);
             fn.addEnvironment("DB_PASSWORD", rdsDBPassword!);
             fn.addEnvironment("DB_PORT", rdsDBPort.toString());
-            // this.rdsProxy.grantConnect(fn, rdsDBUser);
+            this.rdsProxy.grantConnect(fn, rdsDBUser);
         }
         this.functions[name] = fn;
     };
@@ -125,33 +126,6 @@ export class PresenceApiStack extends CDK.Stack {
     constructor(scope: CDK.Construct, id: string, props?: CDK.StackProps) {
         super(scope, id, props);
 
-        /**
-         * Network
-         * 
-         * Defines a VPC with two subnet groups.
-         * The CDK automatically creates subnets in at least 2 AZs by default.
-         * Subnet types can be:
-         * - ISOLATED: fully isolated
-         * - PRIVATE: could be used for a Lambda function that would require internet access through a NAT Gateway
-         * - PUBLIC: required if there is a PRIVATE subnet to setup a NAT Gateway
-         */
-        // this.vpc = new EC2.Vpc(this, 'PresenceVPC', {
-        //     cidr: "10.42.0.0/16",
-        //     subnetConfiguration: [
-        //         // Subnet group for REDIS_PRESENCE
-        //         {
-        //             cidrMask: 24,
-        //             name: "Redis",
-        //             subnetType: EC2.SubnetType.ISOLATED
-        //         },
-        //         {
-        //             cidrMask: 24,
-        //             name: "Lambda",
-        //             subnetType: EC2.SubnetType.ISOLATED
-        //         }
-        //     ]
-        // });
-
         this.vpc = EC2.Vpc.fromLookup(this, 'PresenceVPC', {
             isDefault: false,
             vpcId: pagenowVpcId
@@ -181,6 +155,8 @@ export class PresenceApiStack extends CDK.Stack {
             vpcId: pagenowVpcId!,
             mapPublicIpOnLaunch: false
         });
+        // this.lambdaSubnet1 = EC2.Subnet.fromSubnetId(this, 'lambdaSubnet1', privateSubnet1Id!) as EC2.Subnet;
+        // this.lambdaSubnet2 = EC2.Subnet.fromSubnetId(this, 'lambdaSubnet2', privateSubnet2Id!) as EC2.Subnet;
 
         /**
          * Three security groups:
@@ -197,6 +173,7 @@ export class PresenceApiStack extends CDK.Stack {
             vpc: this.vpc,
             description: "Security group for Lambda functions"
         });
+
         // REDIS SG accepts TCP connections from the Lambda SG on Redis port.
         redisSG.addIngressRule(
             this.lambdaSG,
