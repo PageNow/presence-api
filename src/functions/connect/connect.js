@@ -1,5 +1,4 @@
 const { promisify } = require('util');
-const AWS = require('aws-sdk');
 const redis = require('redis');
 const jwt = require('jsonwebtoken');
 

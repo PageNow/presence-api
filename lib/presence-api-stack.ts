@@ -228,7 +228,7 @@ export class PresenceApiStack extends CDK.Stack {
         );
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
-            'add_user_info', 'test_connect'
+            'add_users', 'add_friendship', 'test_connect', 'test_heartbeat', 'get_status'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
