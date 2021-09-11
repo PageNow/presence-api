@@ -15,8 +15,8 @@ import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations'
 
 import { PresenceSchema } from "./schema";
 import {
-    pagenowVpcId, rdsProxySgId, userPoolId, rdsDBName, rdsDBRoHost, rdsDBRwHost, rdsDBHost,
-    rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName, privateSubnet1Id, privateSubnet2Id
+    pagenowVpcId, rdsProxySgId, userPoolId, rdsDBName, rdsDBHost,
+    rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName,
 } from '../stack-consts';
 
 // Interface used as parameter to create resolvers for API
@@ -56,16 +56,15 @@ export class PresenceApiStack extends CDK.Stack {
      * @param useRedis - whether the functino uses redis or not (requires layer/VPC/env_variables if so)
      */
     private addFunction = (
-        name: string, useRedis: boolean = true, usePostgres: boolean = true
+        name: string, useRedis: boolean = true, usePostgres: boolean = true,
+        isTestFunction: boolean = false
     ): void => {
-        const props = useRedis ? {
+        const fn = new Lambda.Function(this, name, {
             vpc: this.vpc,
             vpcSubnets: { subnets: [ this.lambdaSubnet1, this.lambdaSubnet2 ] },
-            securityGroups: [this.lambdaSG]
-        } : {};
-        const fn = new Lambda.Function(this, name, {
-            ...props,
-            code: Lambda.Code.fromAsset(path.resolve(__dirname, `../src/functions/${name}`)),
+            securityGroups: [ this.lambdaSG ],
+            code: Lambda.Code.fromAsset(path.resolve(__dirname, isTestFunction
+                ? `../src/test_functions/${name}` : `../src/functions/${name}`)),
             runtime: Lambda.Runtime.NODEJS_12_X,
             handler: `${name}.handler`
         });
@@ -78,8 +77,7 @@ export class PresenceApiStack extends CDK.Stack {
         }
         if (usePostgres) {
             fn.addEnvironment("DB_USER", rdsDBUser!);
-            fn.addEnvironment("DB_RW_HOST", rdsDBRwHost!);
-            fn.addEnvironment("DB_RO_HOST", rdsDBRoHost!);
+            fn.addEnvironment("DB_HOST", rdsDBHost!);
             fn.addEnvironment("DB_DATABASE", rdsDBName);
             fn.addEnvironment("DB_PASSWORD", rdsDBPassword!);
             fn.addEnvironment("DB_PORT", rdsDBPort.toString());
@@ -155,14 +153,9 @@ export class PresenceApiStack extends CDK.Stack {
             vpcId: pagenowVpcId!,
             mapPublicIpOnLaunch: false
         });
-        // this.lambdaSubnet1 = EC2.Subnet.fromSubnetId(this, 'lambdaSubnet1', privateSubnet1Id!) as EC2.Subnet;
-        // this.lambdaSubnet2 = EC2.Subnet.fromSubnetId(this, 'lambdaSubnet2', privateSubnet2Id!) as EC2.Subnet;
 
         /**
-         * Three security groups:
-         * 1. Redis presence cluster
-         * 2. Redis status cluster
-         * 3. Lambda functions
+         * Three security groups: RDS Proxy SG, Redis SG, Lambda SG
          */
         const rdsProxySG = EC2.SecurityGroup.fromLookup(this, "rdsProxySG", rdsProxySgId!);
         const redisSG = new EC2.SecurityGroup(this, "redisSg", {
@@ -174,7 +167,6 @@ export class PresenceApiStack extends CDK.Stack {
             description: "Security group for Lambda functions"
         });
 
-        // REDIS SG accepts TCP connections from the Lambda SG on Redis port.
         redisSG.addIngressRule(
             this.lambdaSG,
             EC2.Port.tcp(this.redisPort)
@@ -214,7 +206,7 @@ export class PresenceApiStack extends CDK.Stack {
             automaticFailoverEnabled: true,
             multiAzEnabled: true,
             cacheSubnetGroupName: redisSubnets.ref,
-            securityGroupIds: [redisSG.securityGroupId],
+            securityGroupIds: [ redisSG.securityGroupId ],
             port: this.redisPort
         });
 
@@ -228,8 +220,17 @@ export class PresenceApiStack extends CDK.Stack {
             compatibleRuntimes: [Lambda.Runtime.NODEJS_12_X],
             layerVersionName: "presenceLayer"
         });
-        ['heartbeat', 'status', 'disconnect', 'timeout', 'connect', 'update_presence'].forEach(
+        // Add Lambda functions
+        [ 
+            'heartbeat', 'status', 'disconnect', 'timeout', 'connect', 'update_presence' 
+        ].forEach(
             (fn) => { this.addFunction(fn) }
+        );
+        // Add Lambda test functions (for filling in initial data and testing)
+        [ 
+            'add_user_info', 'connect'
+        ].forEach(
+            (fn) => { this.addFunction(fn, true, true, true) }
         );
         this.addFunction("on_disconnect", false);
 

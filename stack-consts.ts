@@ -12,8 +12,6 @@ export const rdsProxySgId = process.env.RDS_PROXY_SG_ID;
 
 export const rdsDBName = 'core_db';
 export const rdsDBHost = process.env.RDS_HOST;
-export const rdsDBRwHost = process.env.RDS_RW_HOST;
-export const rdsDBRoHost = process.env.RDS_RO_HOST;
 export const rdsDBUser = process.env.RDS_USERNAME;
 export const rdsDBPassword = process.env.RDS_PASSWORD;
 export const rdsDBPort = 5432;

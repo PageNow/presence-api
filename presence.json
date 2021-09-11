@@ -1,6 +1,6 @@
 {
   "PresenceApiStack": {
-    "presenceapi": "https://fny4uv6zgvdn5jnlq2k6et4nki.appsync-api.us-west-2.amazonaws.com/graphql",
+    "presenceapi": "https://556ahewddnagla5ycmo5p7oqvi.appsync-api.us-west-2.amazonaws.com/graphql",
     "region": "us-west-2"
   }
 }
