@@ -1,11 +1,19 @@
 require('dotenv').config();
 
-export const userPoolId = process.env.USER_POOL_ID;
+export const cognitoPoolId = process.env.COGNITO_POOL_ID;
 
 export const pagenowVpcId = process.env.VPC_ID;
 
+export const privateRouteTableId = process.env.PRIVATE_ROUTE_TABLE_ID;
+export const publicRouteTableId = process.env.PUBLIC_ROUTE_TABLE_ID;
+
+export const subnet1AZ = process.env.SUBNET1_AZ
+export const subnet2AZ = process.env.SUBNET2_AZ
+
 export const privateSubnet1Id = process.env.PRIVATE_SUBNET1_ID;
 export const privateSubnet2Id = process.env.PRIVATE_SUBNET2_ID;
+export const publicSubnet1Id = process.env.PUBLIC_SUBNET1_ID;
+export const publicSubnet2Id = process.env.PUBLIC_SUBNET2_ID;
 
 export const rdsSgId = process.env.RDS_SG_ID;
 export const rdsProxySgId = process.env.RDS_PROXY_SG_ID;

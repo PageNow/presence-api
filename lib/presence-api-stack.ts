@@ -15,8 +15,10 @@ import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations'
 
 import { PresenceSchema } from "./schema";
 import {
-    pagenowVpcId, rdsProxySgId, userPoolId, rdsDBName, rdsDBHost,
+    pagenowVpcId, rdsProxySgId, cognitoPoolId, rdsDBName, rdsDBHost,
     rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName,
+    privateSubnet1Id, privateSubnet2Id, publicSubnet1Id, publicSubnet2Id,
+    privateRouteTableId, publicRouteTableId, subnet1AZ, subnet2AZ
 } from '../stack-consts';
 
 // Interface used as parameter to create resolvers for API
@@ -34,8 +36,14 @@ interface ResolverOptions {
 export class PresenceApiStack extends CDK.Stack {
 
     private vpc: EC2.Vpc;
-    private lambdaSubnet1: EC2.Subnet;
-    private lambdaSubnet2: EC2.Subnet;
+    private privateSubnet1: EC2.Subnet;
+    private privateSubnet2: EC2.Subnet;
+    private publicSubnet1: EC2.Subnet;
+    private publicSubnet2: EC2.Subnet;
+    // private lambdaPrivateSubnet1: EC2.Subnet;
+    // private lambdaPrivateSubnet2: EC2.Subnet;
+    // private lambdaPublicSubnet1: EC2.Subnet;
+    // private lambdaPublicSubnet2: EC2.Subnet;
     private lambdaSG: EC2.SecurityGroup;
     private lambdaLayer: Lambda.LayerVersion;
     private redisCluster: ElasticCache.CfnReplicationGroup;
@@ -57,11 +65,14 @@ export class PresenceApiStack extends CDK.Stack {
      */
     private addFunction = (
         name: string, useRedis: boolean = true, usePostgres: boolean = true,
-        isTestFunction: boolean = false
+        isTestFunction: boolean = false, isPrivate: boolean = true
     ): void => {
         const fn = new Lambda.Function(this, name, {
             vpc: this.vpc,
-            vpcSubnets: { subnets: [ this.lambdaSubnet1, this.lambdaSubnet2 ] },
+            vpcSubnets: isPrivate ?
+                { subnets: [ this.privateSubnet1, this.privateSubnet2 ] } :
+                { subnets: [ this.publicSubnet1, this.publicSubnet2 ] },
+            allowPublicSubnet: !isPrivate,
             securityGroups: [ this.lambdaSG ],
             code: Lambda.Code.fromAsset(path.resolve(__dirname, isTestFunction
                 ? `../src/test_functions/${name}` : `../src/functions/${name}`)),
@@ -129,6 +140,27 @@ export class PresenceApiStack extends CDK.Stack {
             vpcId: pagenowVpcId
         }) as EC2.Vpc;
 
+        this.privateSubnet1 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet1', {
+            subnetId: privateSubnet1Id!,
+            routeTableId: privateRouteTableId,
+            availabilityZone: subnet1AZ
+        }) as EC2.Subnet;
+        this.privateSubnet2 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet2', {
+            subnetId: privateSubnet2Id!,
+            routeTableId: privateRouteTableId,
+            availabilityZone: subnet2AZ
+        }) as EC2.Subnet;
+        this.publicSubnet1 = EC2.Subnet.fromSubnetAttributes(this, 'publicSubnet1', {
+            subnetId: publicSubnet1Id!,
+            routeTableId: publicRouteTableId,
+            availabilityZone: subnet1AZ
+        }) as EC2.Subnet;
+        this.publicSubnet2 = EC2.Subnet.fromSubnetAttributes(this, 'publicSubnet2', {
+            subnetId: publicSubnet2Id!,
+            routeTableId: publicRouteTableId,
+            availabilityZone: subnet2AZ
+        }) as EC2.Subnet;
+
         const redisSubnet1 = new EC2.Subnet(this, 'redisSubnet1', {
             availabilityZone: 'us-west-2a',
             cidrBlock: '10.0.5.0/24',
@@ -141,18 +173,38 @@ export class PresenceApiStack extends CDK.Stack {
             vpcId: pagenowVpcId!,
             mapPublicIpOnLaunch: false
         });
-        this.lambdaSubnet1 = new EC2.Subnet(this, 'lambdaSubnet1', {
-            availabilityZone: 'us-west-2a',
-            cidrBlock: '10.0.7.0/24',
-            vpcId: pagenowVpcId!,
-            mapPublicIpOnLaunch: false
-        });
-        this.lambdaSubnet2 = new EC2.Subnet(this, 'lambdaSubnet2', {
-            availabilityZone: 'us-west-2b',
-            cidrBlock: '10.0.8.0/24',
-            vpcId: pagenowVpcId!,
-            mapPublicIpOnLaunch: false
-        });
+        // this.lambdaPrivateSubnet1 = new EC2.Subnet(this, 'lambdaPrivateSubnet1', {
+        //     availabilityZone: 'us-west-2a',
+        //     cidrBlock: '10.0.7.0/24',
+        //     vpcId: pagenowVpcId!,
+        //     mapPublicIpOnLaunch: false
+        // });
+        // this.lambdaPrivateSubnet2 = new EC2.Subnet(this, 'lambdaPrivateSubnet2', {
+        //     availabilityZone: 'us-west-2b',
+        //     cidrBlock: '10.0.8.0/24',
+        //     vpcId: pagenowVpcId!,
+        //     mapPublicIpOnLaunch: false
+        // });
+        // this.lambdaPublicSubnet1 = new EC2.Subnet(this, 'lambdaPublicSubnet1', {
+        //     availabilityZone: 'us-west-2a',
+        //     cidrBlock: '10.0.9.0/24',
+        //     vpcId: pagenowVpcId!,
+        //     mapPublicIpOnLaunch: false
+        // });
+        // this.lambdaPublicSubnet2 = new EC2.Subnet(this, 'lambdaPublicSubnet2', {
+        //     availabilityZone: 'us-west-2b',
+        //     cidrBlock: '10.0.10.0/24',
+        //     vpcId: pagenowVpcId!,
+        //     mapPublicIpOnLaunch: false
+        // });
+        // Lambda Public Subnet NAT Gateway
+        // const lambdaGateway = new EC2.CfnNatGateway(this, 'lambdaNatGateway', {
+        //     subnetId: this.lambdaPublicSubnet1.subnetId
+        // });
+        // const lambdaRouteTableAssociation = new EC2.CfnSubnetRouteTableAssociation(this, 'lambdaPublicRouteTableAssociation', {
+        //     routeTableId: publicRouteTableId!,
+        //     subnetId: this.lambdaPublicSubnet1.subnetId
+        // })
 
         /**
          * Three security groups: RDS Proxy SG, Redis SG, Lambda SG
@@ -222,13 +274,19 @@ export class PresenceApiStack extends CDK.Stack {
         });
         // Add Lambda functions
         [ 
-            'heartbeat', 'status', 'disconnect', 'timeout', 'connect', 'update_presence' 
+            'heartbeat', 'status', 'disconnect', 'timeout', 'update_presence', 'connect'
         ].forEach(
             (fn) => { this.addFunction(fn) }
         );
+        // Add Lambda functions for public Lambda functions
+        // [ 'connect' ].forEach(
+        //     (fn) => { this.addFunction(fn, true, false, false, false) }
+        // );
+        
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
-            'add_users', 'add_friendship', 'test_connect', 'test_heartbeat', 'get_status'
+            'add_users', 'add_friendship', 'test_connect', 'test_heartbeat', 'get_presence',
+            'get_user_info'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
@@ -237,7 +295,7 @@ export class PresenceApiStack extends CDK.Stack {
         /**
          * Retrieve existing user pool
          */
-        const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', userPoolId!);
+        const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', cognitoPoolId!);
 
         /**
          * GraphQL API
@@ -326,7 +384,7 @@ export class PresenceApiStack extends CDK.Stack {
         eventsEndPointSG.addIngressRule(this.lambdaSG, EC2.Port.tcp(80));
         this.vpc.addInterfaceEndpoint("eventsEndPoint", {
             service: EC2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
-            subnets: { subnets: [ this.lambdaSubnet1, this.lambdaSubnet2 ] },
+            subnets: { subnets: [ this.privateSubnet1, this.privateSubnet2 ] },
             securityGroups: [ eventsEndPointSG ]
         });
 
@@ -375,11 +433,11 @@ export class PresenceApiStack extends CDK.Stack {
             //     })
             // }
         });
-        webSocketApi.addRoute('update-presence', {
-            integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
-                handler: this.getFn('heartbeat'),
-            }),
-        });
+        // webSocketApi.addRoute('update-presence', {
+        //     integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
+        //         handler: this.getFn('heartbeat'),
+        //     }),
+        // });
 
         const apiStage = new ApiGateway.WebSocketStage(this, 'DevStage', {
             webSocketApi,
@@ -391,9 +449,8 @@ export class PresenceApiStack extends CDK.Stack {
             service: 'execute-api',
             resourceName: `${apiStage.stageName}/POST/*`,
             resource: webSocketApi.apiId,
-        });     
-        
-          
+        });
+
         this.getFn('heartbeat').addToRolePolicy(
             new IAM.PolicyStatement({
                 actions: ['execute-api:ManageConnections'],

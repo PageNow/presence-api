@@ -10,7 +10,12 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "aws-appsync": "^4.1.1",
+        "axios": "^0.21.4",
+        "graphql-tag": "^2.12.5",
+        "isomorphic-fetch": "^3.0.0",
         "jsonwebtoken": "^8.5.1",
+        "jwk-to-pem": "^2.0.5",
         "lodash": "^4.17.21",
         "pg": "^8.7.1",
         "redis-cli": "^2.1.0"

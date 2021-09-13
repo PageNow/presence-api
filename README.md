@@ -84,6 +84,10 @@ Check the function identifier from template.yaml and run
 ### Lambda RDS Proxy
 * https://itnext.io/work-with-aws-rds-proxy-9d7e09668080
 
+### JWT decoding
+
+* https://github.com/awslabs/aws-support-tools/tree/master/Cognito/decode-verify-jwt
+
 ## Questions
 
 * Does AppSync verify JWT token? If not, we have to verify manually on Lambda functions... (assume they verify JWT token for now)

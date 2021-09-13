@@ -1,207 +1,46 @@
 Resources:
-  PresenceVPC5404FC46:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.42.0.0/16
-      EnableDnsHostnames: true
-      EnableDnsSupport: true
-      InstanceTenancy: default
-      Tags:
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/Resource
-  PresenceVPCRedisSubnet1Subnet08262FF3:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.42.0.0/24
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: aws-cdk:subnet-name
-          Value: Redis
-        - Key: aws-cdk:subnet-type
-          Value: Isolated
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/RedisSubnet1
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/Subnet
-  PresenceVPCRedisSubnet1RouteTableCA203B66:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      Tags:
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/RedisSubnet1
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/RouteTable
-  PresenceVPCRedisSubnet1RouteTableAssociationACD8D36D:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: PresenceVPCRedisSubnet1RouteTableCA203B66
-      SubnetId:
-        Ref: PresenceVPCRedisSubnet1Subnet08262FF3
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet1/RouteTableAssociation
-  PresenceVPCRedisSubnet2Subnet2EA1B524:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.42.1.0/24
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: aws-cdk:subnet-name
-          Value: Redis
-        - Key: aws-cdk:subnet-type
-          Value: Isolated
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/RedisSubnet2
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/Subnet
-  PresenceVPCRedisSubnet2RouteTable89206F36:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      Tags:
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/RedisSubnet2
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/RouteTable
-  PresenceVPCRedisSubnet2RouteTableAssociation8EE3C076:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: PresenceVPCRedisSubnet2RouteTable89206F36
-      SubnetId:
-        Ref: PresenceVPCRedisSubnet2Subnet2EA1B524
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/RedisSubnet2/RouteTableAssociation
-  PresenceVPCLambdaSubnet1Subnet99C81E1C:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.42.2.0/24
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: aws-cdk:subnet-name
-          Value: Lambda
-        - Key: aws-cdk:subnet-type
-          Value: Isolated
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/LambdaSubnet1
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/Subnet
-  PresenceVPCLambdaSubnet1RouteTable3AF87A21:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      Tags:
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/LambdaSubnet1
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/RouteTable
-  PresenceVPCLambdaSubnet1RouteTableAssociation7A0FE804:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: PresenceVPCLambdaSubnet1RouteTable3AF87A21
-      SubnetId:
-        Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet1/RouteTableAssociation
-  PresenceVPCLambdaSubnet2Subnet5C09EBC3:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.42.3.0/24
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: aws-cdk:subnet-name
-          Value: Lambda
-        - Key: aws-cdk:subnet-type
-          Value: Isolated
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/LambdaSubnet2
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/Subnet
-  PresenceVPCLambdaSubnet2RouteTableB11EF8D3:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: PresenceVPC5404FC46
-      Tags:
-        - Key: Name
-          Value: PresenceApiStack/PresenceVPC/LambdaSubnet2
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/RouteTable
-  PresenceVPCLambdaSubnet2RouteTableAssociation0C3EF9B3:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: PresenceVPCLambdaSubnet2RouteTableB11EF8D3
-      SubnetId:
-        Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
-    Metadata:
-      aws:cdk:path: PresenceApiStack/PresenceVPC/LambdaSubnet2/RouteTableAssociation
   PresenceVPCeventsEndPoint682C555D:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName:
-        Fn::Join:
-          - ""
-          - - com.amazonaws.
-            - Ref: AWS::Region
-            - .events
-      VpcId:
-        Ref: PresenceVPC5404FC46
+      ServiceName: com.amazonaws.us-west-2.events
+      VpcId: vpc-0514c9481cc847409
       PrivateDnsEnabled: true
       SecurityGroupIds:
         - Fn::GetAtt:
             - eventsEndPointSG1AD6A545
             - GroupId
       SubnetIds:
-        - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-        - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+        - subnet-04a05887fd48a05c5
+        - subnet-01ead743c37e0f664
       VpcEndpointType: Interface
     Metadata:
       aws:cdk:path: PresenceApiStack/PresenceVPC/eventsEndPoint/Resource
-  redisSG7DE41A86:
+  rdsProxySGfromPresenceApiStacklambdaSg8EC30D15543231F0D57B:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      Description: from PresenceApiStacklambdaSg8EC30D15:5432
+      FromPort: 5432
+      GroupId: sg-02397ba0c0344ce9c
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+          - lambdaSgD8D93E20
+          - GroupId
+      ToPort: 5432
+    Metadata:
+      aws:cdk:path: PresenceApiStack/rdsProxySG/from PresenceApiStacklambdaSg8EC30D15:5432
+  redisSg025198AC:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for REDIS Cluster
+      GroupDescription: Security group for Redis Cluster
       SecurityGroupEgress:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: "-1"
-      VpcId:
-        Ref: PresenceVPC5404FC46
+      VpcId: vpc-0514c9481cc847409
     Metadata:
-      aws:cdk:path: PresenceApiStack/redisSG/Resource
-  redisSGfromPresenceApiStacklambdaSg8EC30D1563794DF2C85F:
+      aws:cdk:path: PresenceApiStack/redisSg/Resource
+  redisSgfromPresenceApiStacklambdaSg8EC30D156379C22AC7F6:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
@@ -209,7 +48,7 @@ Resources:
       FromPort: 6379
       GroupId:
         Fn::GetAtt:
-          - redisSG7DE41A86
+          - redisSg025198AC
           - GroupId
       SourceSecurityGroupId:
         Fn::GetAtt:
@@ -217,7 +56,7 @@ Resources:
           - GroupId
       ToPort: 6379
     Metadata:
-      aws:cdk:path: PresenceApiStack/redisSG/from PresenceApiStacklambdaSg8EC30D15:6379
+      aws:cdk:path: PresenceApiStack/redisSg/from PresenceApiStacklambdaSg8EC30D15:6379
   lambdaSgD8D93E20:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -226,8 +65,7 @@ Resources:
         - CidrIp: 0.0.0.0/0
           Description: Allow all outbound traffic by default
           IpProtocol: "-1"
-      VpcId:
-        Ref: PresenceVPC5404FC46
+      VpcId: vpc-0514c9481cc847409
     Metadata:
       aws:cdk:path: PresenceApiStack/lambdaSg/Resource
   RedisSubnets:
@@ -235,8 +73,8 @@ Resources:
     Properties:
       Description: Subnet Group for Redis Cluster
       SubnetIds:
-        - Ref: PresenceVPCRedisSubnet1Subnet08262FF3
-        - Ref: PresenceVPCRedisSubnet2Subnet2EA1B524
+        - subnet-04a05887fd48a05c5
+        - subnet-01ead743c37e0f664
       CacheSubnetGroupName: RedisSubnets
     Metadata:
       aws:cdk:path: PresenceApiStack/RedisSubnets
@@ -254,16 +92,16 @@ Resources:
       Port: 6379
       SecurityGroupIds:
         - Fn::GetAtt:
-            - redisSG7DE41A86
+            - redisSg025198AC
             - GroupId
     Metadata:
       aws:cdk:path: PresenceApiStack/PresenceCluster
-  redisModule3972F6F0:
+  lambdaModuleE2C8C55A:
     Type: AWS::Lambda::LayerVersion
     Properties:
       Content:
         S3Bucket:
-          Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3BucketF32DAE3E
+          Ref: AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1S3Bucket15EACB62
         S3Key:
           Fn::Join:
             - ""
@@ -271,17 +109,17 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4
+                      - Ref: AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1S3VersionKey5C1E1150
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4
+                      - Ref: AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1S3VersionKey5C1E1150
       CompatibleRuntimes:
         - nodejs12.x
       LayerName: presenceLayer
     Metadata:
-      aws:cdk:path: PresenceApiStack/redisModule/Resource
+      aws:cdk:path: PresenceApiStack/lambdaModule/Resource
       aws:asset:path: /Users/ylee/pagenow/presence-api/src/layer
       aws:asset:property: Content
   heartbeatServiceRoleD63C9062:
@@ -312,12 +150,30 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
           - Action: events:PutEvents
             Effect: Allow
             Resource:
               Fn::GetAtt:
                 - PresenceBus5D952912
                 - Arn
+          - Action: execute-api:ManageConnections
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - ":execute-api:us-west-2:257206538165:"
+                  - Ref: PresenceWebsocketApi9594EC70
+                  - /dev/POST/*
         Version: "2012-10-17"
       PolicyName: heartbeatServiceRoleDefaultPolicy2B328071
       Roles:
@@ -329,7 +185,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3Bucket879FCA84
+          Ref: AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dS3BucketABB367F9
         S3Key:
           Fn::Join:
             - ""
@@ -337,12 +193,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED
+                      - Ref: AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dS3VersionKey62254DDF
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED
+                      - Ref: AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dS3VersionKey62254DDF
       Role:
         Fn::GetAtt:
           - heartbeatServiceRoleD63C9062
@@ -357,11 +213,16 @@ Resources:
             Fn::GetAtt:
               - PresenceCluster
               - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
           EVENT_BUS:
             Ref: PresenceBus5D952912
       Handler: heartbeat.handler
       Layers:
-        - Ref: redisModule3972F6F0
+        - Ref: lambdaModuleE2C8C55A
       Runtime: nodejs12.x
       VpcConfig:
         SecurityGroupIds:
@@ -369,8 +230,8 @@ Resources:
               - lambdaSgD8D93E20
               - GroupId
         SubnetIds:
-          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
     DependsOn:
       - heartbeatServiceRoleDefaultPolicy2B328071
       - heartbeatServiceRoleD63C9062
@@ -401,12 +262,31 @@ Resources:
               - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
     Metadata:
       aws:cdk:path: PresenceApiStack/status/ServiceRole/Resource
+  statusServiceRoleDefaultPolicy48AB5C59:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: statusServiceRoleDefaultPolicy48AB5C59
+      Roles:
+        - Ref: statusServiceRole987113E6
+    Metadata:
+      aws:cdk:path: PresenceApiStack/status/ServiceRole/DefaultPolicy/Resource
   status13EA9EF7:
     Type: AWS::Lambda::Function
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3Bucket1FBE7F78
+          Ref: AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82S3BucketA56956B1
         S3Key:
           Fn::Join:
             - ""
@@ -414,12 +294,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872
+                      - Ref: AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82S3VersionKey5E698AAB
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872
+                      - Ref: AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82S3VersionKey5E698AAB
       Role:
         Fn::GetAtt:
           - statusServiceRole987113E6
@@ -434,9 +314,14 @@ Resources:
             Fn::GetAtt:
               - PresenceCluster
               - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
       Handler: status.handler
       Layers:
-        - Ref: redisModule3972F6F0
+        - Ref: lambdaModuleE2C8C55A
       Runtime: nodejs12.x
       VpcConfig:
         SecurityGroupIds:
@@ -444,9 +329,10 @@ Resources:
               - lambdaSgD8D93E20
               - GroupId
         SubnetIds:
-          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
     DependsOn:
+      - statusServiceRoleDefaultPolicy48AB5C59
       - statusServiceRole987113E6
     Metadata:
       aws:cdk:path: PresenceApiStack/status/Resource
@@ -480,6 +366,14 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
           - Action: events:PutEvents
             Effect: Allow
             Resource:
@@ -497,7 +391,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3Bucket604DC603
+          Ref: AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0S3Bucket6A9B315A
         S3Key:
           Fn::Join:
             - ""
@@ -505,12 +399,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08
+                      - Ref: AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0S3VersionKey5CB52CA2
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08
+                      - Ref: AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0S3VersionKey5CB52CA2
       Role:
         Fn::GetAtt:
           - disconnectServiceRole372F5647
@@ -525,11 +419,16 @@ Resources:
             Fn::GetAtt:
               - PresenceCluster
               - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
           EVENT_BUS:
             Ref: PresenceBus5D952912
       Handler: disconnect.handler
       Layers:
-        - Ref: redisModule3972F6F0
+        - Ref: lambdaModuleE2C8C55A
       Runtime: nodejs12.x
       VpcConfig:
         SecurityGroupIds:
@@ -537,8 +436,8 @@ Resources:
               - lambdaSgD8D93E20
               - GroupId
         SubnetIds:
-          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
     DependsOn:
       - disconnectServiceRoleDefaultPolicy43698ECC
       - disconnectServiceRole372F5647
@@ -574,6 +473,14 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
           - Action: events:PutEvents
             Effect: Allow
             Resource:
@@ -591,7 +498,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3Bucket3CC2E988
+          Ref: AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9S3Bucket3F2BBAC7
         S3Key:
           Fn::Join:
             - ""
@@ -599,12 +506,12 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63
+                      - Ref: AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9S3VersionKeyA723C277
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63
+                      - Ref: AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9S3VersionKeyA723C277
       Role:
         Fn::GetAtt:
           - timeoutServiceRole175F298C
@@ -619,12 +526,17 @@ Resources:
             Fn::GetAtt:
               - PresenceCluster
               - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
           TIMEOUT: "10000"
           EVENT_BUS:
             Ref: PresenceBus5D952912
       Handler: timeout.handler
       Layers:
-        - Ref: redisModule3972F6F0
+        - Ref: lambdaModuleE2C8C55A
       Runtime: nodejs12.x
       VpcConfig:
         SecurityGroupIds:
@@ -632,14 +544,781 @@ Resources:
               - lambdaSgD8D93E20
               - GroupId
         SubnetIds:
-          - Ref: PresenceVPCLambdaSubnet1Subnet99C81E1C
-          - Ref: PresenceVPCLambdaSubnet2Subnet5C09EBC3
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
     DependsOn:
       - timeoutServiceRoleDefaultPolicyC545BCB2
       - timeoutServiceRole175F298C
     Metadata:
       aws:cdk:path: PresenceApiStack/timeout/Resource
       aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/timeout
+      aws:asset:property: Code
+  updatepresenceServiceRole3303CE59:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/update_presence/ServiceRole/Resource
+  updatepresenceServiceRoleDefaultPolicy31CBD0C1:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: updatepresenceServiceRoleDefaultPolicy31CBD0C1
+      Roles:
+        - Ref: updatepresenceServiceRole3303CE59
+    Metadata:
+      aws:cdk:path: PresenceApiStack/update_presence/ServiceRole/DefaultPolicy/Resource
+  updatepresence26EF7F6D:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272S3Bucket106F56FA
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272S3VersionKeyBE076A88
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272S3VersionKeyBE076A88
+      Role:
+        Fn::GetAtt:
+          - updatepresenceServiceRole3303CE59
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: update_presence.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - updatepresenceServiceRoleDefaultPolicy31CBD0C1
+      - updatepresenceServiceRole3303CE59
+    Metadata:
+      aws:cdk:path: PresenceApiStack/update_presence/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/update_presence
+      aws:asset:property: Code
+  connectServiceRoleE059EF99:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/connect/ServiceRole/Resource
+  connectEB2081F1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cS3Bucket97807D65
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cS3VersionKeyB71B22BD
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cS3VersionKeyB71B22BD
+      Role:
+        Fn::GetAtt:
+          - connectServiceRoleE059EF99
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+      Handler: connect.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-0bf18262270a94742
+          - subnet-06ce0f88faa21b358
+    DependsOn:
+      - connectServiceRoleE059EF99
+    Metadata:
+      aws:cdk:path: PresenceApiStack/connect/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/functions/connect
+      aws:asset:property: Code
+  addusersServiceRole01AE3677:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_users/ServiceRole/Resource
+  addusersServiceRoleDefaultPolicy07FCDFBA:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: addusersServiceRoleDefaultPolicy07FCDFBA
+      Roles:
+        - Ref: addusersServiceRole01AE3677
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_users/ServiceRole/DefaultPolicy/Resource
+  addusers55677B14:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dS3Bucket97E4C1D0
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dS3VersionKeyA7A5A6D7
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dS3VersionKeyA7A5A6D7
+      Role:
+        Fn::GetAtt:
+          - addusersServiceRole01AE3677
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: add_users.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - addusersServiceRoleDefaultPolicy07FCDFBA
+      - addusersServiceRole01AE3677
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_users/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/add_users
+      aws:asset:property: Code
+  addfriendshipServiceRole5068AB8B:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_friendship/ServiceRole/Resource
+  addfriendshipServiceRoleDefaultPolicy6E7B986F:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: addfriendshipServiceRoleDefaultPolicy6E7B986F
+      Roles:
+        - Ref: addfriendshipServiceRole5068AB8B
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_friendship/ServiceRole/DefaultPolicy/Resource
+  addfriendship90EF3735:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313S3Bucket7F173C80
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313S3VersionKey7E0F83FB
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313S3VersionKey7E0F83FB
+      Role:
+        Fn::GetAtt:
+          - addfriendshipServiceRole5068AB8B
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: add_friendship.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - addfriendshipServiceRoleDefaultPolicy6E7B986F
+      - addfriendshipServiceRole5068AB8B
+    Metadata:
+      aws:cdk:path: PresenceApiStack/add_friendship/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/add_friendship
+      aws:asset:property: Code
+  testconnectServiceRoleFC7EAA39:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_connect/ServiceRole/Resource
+  testconnectServiceRoleDefaultPolicy73CA1575:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: testconnectServiceRoleDefaultPolicy73CA1575
+      Roles:
+        - Ref: testconnectServiceRoleFC7EAA39
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_connect/ServiceRole/DefaultPolicy/Resource
+  testconnect7ADB2CC4:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533S3Bucket6591DBF0
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533S3VersionKey8022A003
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533S3VersionKey8022A003
+      Role:
+        Fn::GetAtt:
+          - testconnectServiceRoleFC7EAA39
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: test_connect.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - testconnectServiceRoleDefaultPolicy73CA1575
+      - testconnectServiceRoleFC7EAA39
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_connect/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/test_connect
+      aws:asset:property: Code
+  testheartbeatServiceRole80C5A240:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_heartbeat/ServiceRole/Resource
+  testheartbeatServiceRoleDefaultPolicy71EE384D:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: testheartbeatServiceRoleDefaultPolicy71EE384D
+      Roles:
+        - Ref: testheartbeatServiceRole80C5A240
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_heartbeat/ServiceRole/DefaultPolicy/Resource
+  testheartbeatD7A38B19:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2S3BucketD44B51EE
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2S3VersionKey5E0F095F
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2S3VersionKey5E0F095F
+      Role:
+        Fn::GetAtt:
+          - testheartbeatServiceRole80C5A240
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: test_heartbeat.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - testheartbeatServiceRoleDefaultPolicy71EE384D
+      - testheartbeatServiceRole80C5A240
+    Metadata:
+      aws:cdk:path: PresenceApiStack/test_heartbeat/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/test_heartbeat
+      aws:asset:property: Code
+  getpresenceServiceRole2580782F:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_presence/ServiceRole/Resource
+  getpresenceServiceRoleDefaultPolicy8CDE2247:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: getpresenceServiceRoleDefaultPolicy8CDE2247
+      Roles:
+        - Ref: getpresenceServiceRole2580782F
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_presence/ServiceRole/DefaultPolicy/Resource
+  getpresenceDC17265E:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5S3Bucket4B1CB4A0
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5S3VersionKey98F22E2E
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5S3VersionKey98F22E2E
+      Role:
+        Fn::GetAtt:
+          - getpresenceServiceRole2580782F
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: get_presence.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - getpresenceServiceRoleDefaultPolicy8CDE2247
+      - getpresenceServiceRole2580782F
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_presence/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/get_presence
+      aws:asset:property: Code
+  getuserinfoServiceRole302971B0:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_user_info/ServiceRole/Resource
+  getuserinfoServiceRoleDefaultPolicy72E6C253:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
+        Version: "2012-10-17"
+      PolicyName: getuserinfoServiceRoleDefaultPolicy72E6C253
+      Roles:
+        - Ref: getuserinfoServiceRole302971B0
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_user_info/ServiceRole/DefaultPolicy/Resource
+  getuserinfo1A1383D6:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4S3Bucket31C5E950
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4S3VersionKey6BC3326D
+              - Fn::Select:
+                  - 1
+                  - Fn::Split:
+                      - "||"
+                      - Ref: AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4S3VersionKey6BC3326D
+      Role:
+        Fn::GetAtt:
+          - getuserinfoServiceRole302971B0
+          - Arn
+      Environment:
+        Variables:
+          REDIS_HOST:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Address
+          REDIS_PORT:
+            Fn::GetAtt:
+              - PresenceCluster
+              - PrimaryEndPoint.Port
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
+      Handler: get_user_info.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
+      Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
+    DependsOn:
+      - getuserinfoServiceRoleDefaultPolicy72E6C253
+      - getuserinfoServiceRole302971B0
+    Metadata:
+      aws:cdk:path: PresenceApiStack/get_user_info/Resource
+      aws:asset:path: /Users/ylee/pagenow/presence-api/src/test_functions/get_user_info
       aws:asset:property: Code
   ondisconnectServiceRoleC1A63C53:
     Type: AWS::IAM::Role
@@ -657,6 +1336,11 @@ Resources:
             - - "arn:"
               - Ref: AWS::Partition
               - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
     Metadata:
       aws:cdk:path: PresenceApiStack/on_disconnect/ServiceRole/Resource
   ondisconnectServiceRoleDefaultPolicy4D06E5F1:
@@ -664,6 +1348,14 @@ Resources:
     Properties:
       PolicyDocument:
         Statement:
+          - Action: rds-db:connect
+            Effect: Allow
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:"
+                  - Ref: AWS::Partition
+                  - :rds-db:us-west-2:257206538165:dbuser:prx-0933f2c6b7e858209/ylee
           - Action: appsync:GraphQL
             Effect: Allow
             Resource:
@@ -684,7 +1376,7 @@ Resources:
     Properties:
       Code:
         S3Bucket:
-          Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3Bucket7E4533C9
+          Ref: AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aS3Bucket4E6B0FF8
         S3Key:
           Fn::Join:
             - ""
@@ -692,24 +1384,39 @@ Resources:
                   - 0
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51
+                      - Ref: AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aS3VersionKey416B108B
               - Fn::Select:
                   - 1
                   - Fn::Split:
                       - "||"
-                      - Ref: AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51
+                      - Ref: AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aS3VersionKey416B108B
       Role:
         Fn::GetAtt:
           - ondisconnectServiceRoleC1A63C53
           - Arn
       Environment:
         Variables:
+          DB_USER: ylee
+          DB_HOST: user-api-production-rds-proxy.proxy-cpqo2bmnlxnm.us-west-2.rds.amazonaws.com
+          DB_DATABASE: core_db
+          DB_PASSWORD: 2dragonvirus
+          DB_PORT: "5432"
           GRAPHQL_ENDPOINT:
             Fn::GetAtt:
               - PresenceAPI097D0E1D
               - GraphQLUrl
       Handler: on_disconnect.handler
+      Layers:
+        - Ref: lambdaModuleE2C8C55A
       Runtime: nodejs12.x
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - lambdaSgD8D93E20
+              - GroupId
+        SubnetIds:
+          - subnet-04a05887fd48a05c5
+          - subnet-01ead743c37e0f664
     DependsOn:
       - ondisconnectServiceRoleDefaultPolicy4D06E5F1
       - ondisconnectServiceRoleC1A63C53
@@ -749,10 +1456,9 @@ Resources:
             - Arn
         FieldLogLevel: ALL
       UserPoolConfig:
-        AwsRegion:
-          Ref: AWS::Region
+        AwsRegion: us-west-2
         DefaultAction: ALLOW
-        UserPoolId: us-east-1_014HGnyeu
+        UserPoolId: us-west-2_32JgtVKUN
     Metadata:
       aws:cdk:path: PresenceApiStack/PresenceAPI/Resource
   PresenceAPISchemaB664B62D:
@@ -773,21 +1479,23 @@ Resources:
           offline
         }
         type Presence @aws_cognito_user_pools @aws_iam {
-          id: ID!
+          userId: ID!
           status: Status!
+          url: String!
+          title: String!
         }
         type Query {
-          heartbeat(id: ID!): Presence
-          status(id: ID!): Presence
+          heartbeat(url: String! title: String!): Presence
+          status(userId: ID!): Presence
         }
         type Mutation {
-          connect(id: ID!): Presence
-          disconnect(id: ID!): Presence
-          disconnected(id: ID!): Presence
+          connect(url: String! title: String!): Presence
+          disconnect: Presence
+          disconnected(userId: ID!): Presence
           @aws_iam
         }
         type Subscription {
-          onStatus(id: ID!): Presence
+          onStatus(userId: ID!): Presence
           @aws_subscribe(mutations: ["connect", "disconnected"])
         }
     Metadata:
@@ -1033,9 +1741,13 @@ Resources:
 
         \                \"payload\": {
 
-        \                    \"id\": \"$context.arguments.id\",
+        \                    \"userId\": \"$context.arguments.userId\",
 
-        \                    \"status\": \"offline\"
+        \                    \"status\": \"offline\",
+
+        \                    \"url\": \"\",
+
+        \                    \"title\": \"\"
 
         \                }
 
@@ -1130,23 +1842,12 @@ Resources:
           Description: Allow all outbound traffic by default
           IpProtocol: "-1"
       SecurityGroupIngress:
-        - CidrIp:
-            Fn::GetAtt:
-              - PresenceVPC5404FC46
-              - CidrBlock
-          Description:
-            Fn::Join:
-              - ""
-              - - "from "
-                - Fn::GetAtt:
-                    - PresenceVPC5404FC46
-                    - CidrBlock
-                - :443
+        - CidrIp: 10.0.0.0/16
+          Description: from 10.0.0.0/16:443
           FromPort: 443
           IpProtocol: tcp
           ToPort: 443
-      VpcId:
-        Ref: PresenceVPC5404FC46
+      VpcId: vpc-0514c9481cc847409
     Metadata:
       aws:cdk:path: PresenceApiStack/eventsEndPointSG/Resource
   eventsEndPointSGfromPresenceApiStacklambdaSg8EC30D15803C8A1C8F:
@@ -1166,68 +1867,206 @@ Resources:
       ToPort: 80
     Metadata:
       aws:cdk:path: PresenceApiStack/eventsEndPointSG/from PresenceApiStacklambdaSg8EC30D15:80
+  PresenceWebsocketApi9594EC70:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: PresenceWebsocketApi
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceWebsocketApi/Resource
+  PresenceWebsocketApiconnectRoutePresenceApiStackPresenceWebsocketApiconnectRoute8614CDCDPermissionD1359FD9:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - connectEB2081F1
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:us-west-2:257206538165:"
+            - Ref: PresenceWebsocketApi9594EC70
+            - /*/*$connect
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceWebsocketApi/$connect-Route/PresenceApiStackPresenceWebsocketApiconnectRoute8614CDCD-Permission
+  PresenceWebsocketApiconnectRouteWebSocketIntegration27e4d042886c8224be61abcfc3cd60fc92765A21:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId:
+        Ref: PresenceWebsocketApi9594EC70
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - :apigateway:us-west-2:lambda:path/2015-03-31/functions/
+            - Fn::GetAtt:
+                - connectEB2081F1
+                - Arn
+            - /invocations
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceWebsocketApi/$connect-Route/WebSocketIntegration-27e4d042886c8224be61abcfc3cd60fc/Resource
+  PresenceWebsocketApiconnectRoute5280B949:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId:
+        Ref: PresenceWebsocketApi9594EC70
+      RouteKey: $connect
+      Target:
+        Fn::Join:
+          - ""
+          - - integrations/
+            - Ref: PresenceWebsocketApiconnectRouteWebSocketIntegration27e4d042886c8224be61abcfc3cd60fc92765A21
+    Metadata:
+      aws:cdk:path: PresenceApiStack/PresenceWebsocketApi/$connect-Route/Resource
+  DevStage520A913F:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId:
+        Ref: PresenceWebsocketApi9594EC70
+      StageName: dev
+      AutoDeploy: true
+    Metadata:
+      aws:cdk:path: PresenceApiStack/DevStage/Resource
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAAE31Ry27CMBD8Fu7GQPiBAm0REmrTpOK+OAsYEtv12lQoyr/XNijApaedmX14vDvhk8mUjwcv8EtDUZ1GrdAWeVs6ECdWIGlvBbIZEbqg7aXas4VW5KwXji12KgcLDTq0kXx6Z3yS+86AQ30lndSqY/GVFkXG240RMbfJFyy38gwOS79VmJrvqNDe4Tdsa7zrdy240kJCHM1WKnjYgcAw+E1VRkvlbg/0tEThrXSXpdXepIH/Ciu1t0jUMayBnBQgDmEzvY++qUBTh2y0kbSO1dBsK+DtGi5oN2gpOgyVT/zdK+FuiUeco20kUdoXTYcQV088XSBwPvfihG4OhExCw9tCX5eTYq6Dk0uaklDYuDF0UYK3Swvm8FPPjIzpxL7Wz6wMH2yArZP7V3BQ9jd8YPG09fl68B5/aIX3mrCyM6rgun2Lce4pFve48DfLIXZdx5SukB9pdJ5kPBvzbHAkKYfWKycb5MU1/gHzxfE/qgIAAA==
+      Analytics: v2:deflate64:H4sIAAAAAAAA/2VSXVPCMBD8LbyHQOsfUPBjmGG0tjP4fKRnjbRJzCU4nU7/u0lABHy63btNutlrxrM84/PJLXzTVNS72SC0RT5UDsSOlUjaW4Hsjghd6DVSNWypFTnrhWPLd1WAhQ4d2khevDM+tX9PjixePKDI+bBSQfYOAjdGPKjaaKmSdlMsz2mFwlvp+iervVmpxiIRu2j+U40MWyAnBYiPYD6O/VahO6lLNG2YOqnV8UAL3bYGPqyhR7tBS2EUlRf80SvhjoNzXKDtJEXJyOhmCjEd4imkwPnCix26BRAyCR0fSt1ichFroYOTPt2SUEjIGOqV4MOTBfPx1d4ZGceJva4vWRUe2AFbJ/f34KA6LCgozlhMv90fdnLCz1rhnyZEtkcVXA8PsS48RfEJl/5oOdToUDbg8Bv6fdjjG24rHV94tBbLqVdq7/CPxp03Fn6Du6JX4viDpa8mMI4jU7pG/kmzfZbzfM7zySdJObVeOdkhLw/1BzUNllPEAgAA
     Metadata:
       aws:cdk:path: PresenceApiStack/CDKMetadata/Default
-    Condition: CDKMetadataAvailable
 Parameters:
-  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3BucketF32DAE3E:
+  AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1S3Bucket15EACB62:
     Type: String
-    Description: S3 bucket for asset "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
-  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aS3VersionKey83FC2CC4:
+    Description: S3 bucket for asset "76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1"
+  AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1S3VersionKey5C1E1150:
     Type: String
-    Description: S3 key for asset version "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
-  AssetParameters1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344aArtifactHash48E6EA6B:
+    Description: S3 key for asset version "76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1"
+  AssetParameters76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1ArtifactHash5A106CFA:
     Type: String
-    Description: Artifact hash for asset "1e0e5c64dbbe0252c90da7072b3cfb2c036dcfaeedd91df27c1ffb10218a344a"
-  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3Bucket879FCA84:
+    Description: Artifact hash for asset "76a94b95d56ca2686c80c6a1de45b4fa6eedb211f3b2d625888eb9119262b9e1"
+  AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dS3BucketABB367F9:
     Type: String
-    Description: S3 bucket for asset "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
-  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eS3VersionKeyDCCD68ED:
+    Description: S3 bucket for asset "ef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07d"
+  AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dS3VersionKey62254DDF:
     Type: String
-    Description: S3 key for asset version "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
-  AssetParameters7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100eArtifactHash1C94CB72:
+    Description: S3 key for asset version "ef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07d"
+  AssetParametersef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07dArtifactHash68BEDB33:
     Type: String
-    Description: Artifact hash for asset "7afea540dddf3b4e27f2b4762262993dbaa3f9174870fce6cefea0033840100e"
-  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3Bucket1FBE7F78:
+    Description: Artifact hash for asset "ef971dff2711b995f77d97f886e129f0426d6e66b9a473cdace92e2de438a07d"
+  AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82S3BucketA56956B1:
     Type: String
-    Description: S3 bucket for asset "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
-  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588S3VersionKey693CF872:
+    Description: S3 bucket for asset "c9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82"
+  AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82S3VersionKey5E698AAB:
     Type: String
-    Description: S3 key for asset version "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
-  AssetParametersf7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588ArtifactHash0AF6E6B7:
+    Description: S3 key for asset version "c9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82"
+  AssetParametersc9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82ArtifactHashECD87598:
     Type: String
-    Description: Artifact hash for asset "f7c7e615367b4c46bda8d91cedb6917c861f1f3575919fbfe5423945f9b12588"
-  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3Bucket604DC603:
+    Description: Artifact hash for asset "c9099862ce7d3cf08e88999e00c06aeec043fadeecbe65d08e6d38a0aba86b82"
+  AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0S3Bucket6A9B315A:
     Type: String
-    Description: S3 bucket for asset "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
-  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dS3VersionKey8D327C08:
+    Description: S3 bucket for asset "e1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0"
+  AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0S3VersionKey5CB52CA2:
     Type: String
-    Description: S3 key for asset version "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
-  AssetParametersd0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430dArtifactHash4720A902:
+    Description: S3 key for asset version "e1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0"
+  AssetParameterse1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0ArtifactHashF388ED27:
     Type: String
-    Description: Artifact hash for asset "d0791e4076568b4fdbd9f4ea81b8d995e8b94440b8e74e32a1e8aa06a454430d"
-  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3Bucket3CC2E988:
+    Description: Artifact hash for asset "e1e526eddaad559b80df4b12758173f22a837dba8bc3ae48ff7970ea9fa187b0"
+  AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9S3Bucket3F2BBAC7:
     Type: String
-    Description: S3 bucket for asset "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
-  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cS3VersionKeyDD9F0E63:
+    Description: S3 bucket for asset "2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9"
+  AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9S3VersionKeyA723C277:
     Type: String
-    Description: S3 key for asset version "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
-  AssetParameters59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1cArtifactHash2A5AB5DC:
+    Description: S3 key for asset version "2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9"
+  AssetParameters2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9ArtifactHashF8780A41:
     Type: String
-    Description: Artifact hash for asset "59429923777cb1d6f2acee3bc275af4c6afaa9cf4d6e8507733fdda7a2c5ca1c"
-  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3Bucket7E4533C9:
+    Description: Artifact hash for asset "2ac79fecf84f3ba901d27913166f7d9cb869cfc44f5c2540d2d4c66c287b96b9"
+  AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272S3Bucket106F56FA:
     Type: String
-    Description: S3 bucket for asset "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
-  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2S3VersionKey22782B51:
+    Description: S3 bucket for asset "5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272"
+  AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272S3VersionKeyBE076A88:
     Type: String
-    Description: S3 key for asset version "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
-  AssetParameters3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2ArtifactHash1DF3328D:
+    Description: S3 key for asset version "5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272"
+  AssetParameters5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272ArtifactHashDE87AD86:
     Type: String
-    Description: Artifact hash for asset "3a5715726c6b18483d8ec1c54dec1bcf6a5584af3f33f29e28afdd9c069d58b2"
+    Description: Artifact hash for asset "5e44d2fdd7f8f5861332f51d1cf1b092c108d137c79dbe5b3d3bd489826bb272"
+  AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cS3Bucket97807D65:
+    Type: String
+    Description: S3 bucket for asset "9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27c"
+  AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cS3VersionKeyB71B22BD:
+    Type: String
+    Description: S3 key for asset version "9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27c"
+  AssetParameters9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27cArtifactHash746E4B4F:
+    Type: String
+    Description: Artifact hash for asset "9ad807637ff239132269cd9b57c1b74a11f62616005dd978563c9dbed877f27c"
+  AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dS3Bucket97E4C1D0:
+    Type: String
+    Description: S3 bucket for asset "8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931d"
+  AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dS3VersionKeyA7A5A6D7:
+    Type: String
+    Description: S3 key for asset version "8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931d"
+  AssetParameters8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931dArtifactHash3AB5A652:
+    Type: String
+    Description: Artifact hash for asset "8493ecc6f1c112594d2591a57377442e259402492c63c8117dcef281df67931d"
+  AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313S3Bucket7F173C80:
+    Type: String
+    Description: S3 bucket for asset "d32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313"
+  AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313S3VersionKey7E0F83FB:
+    Type: String
+    Description: S3 key for asset version "d32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313"
+  AssetParametersd32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313ArtifactHash7F0805FC:
+    Type: String
+    Description: Artifact hash for asset "d32f183157995b9defe578ae7408426d95c203479c7cd99d3976c85870754313"
+  AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533S3Bucket6591DBF0:
+    Type: String
+    Description: S3 bucket for asset "3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533"
+  AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533S3VersionKey8022A003:
+    Type: String
+    Description: S3 key for asset version "3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533"
+  AssetParameters3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533ArtifactHashD14FAA69:
+    Type: String
+    Description: Artifact hash for asset "3329414b9eae51ff2ac7b7a43053dfbedfa62a89bdf1c034596455f9728f1533"
+  AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2S3BucketD44B51EE:
+    Type: String
+    Description: S3 bucket for asset "c205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2"
+  AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2S3VersionKey5E0F095F:
+    Type: String
+    Description: S3 key for asset version "c205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2"
+  AssetParametersc205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2ArtifactHash3A5BE153:
+    Type: String
+    Description: Artifact hash for asset "c205e39fe917588737fe5e4a09d2f24d243dfe0a136300a9eab348fd75d129a2"
+  AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5S3Bucket4B1CB4A0:
+    Type: String
+    Description: S3 bucket for asset "bd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5"
+  AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5S3VersionKey98F22E2E:
+    Type: String
+    Description: S3 key for asset version "bd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5"
+  AssetParametersbd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5ArtifactHash201DA60C:
+    Type: String
+    Description: Artifact hash for asset "bd41b5ccf2a603860e796b7d17882153e4e88060e65d0d0328cdb019103c9ef5"
+  AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4S3Bucket31C5E950:
+    Type: String
+    Description: S3 bucket for asset "ad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4"
+  AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4S3VersionKey6BC3326D:
+    Type: String
+    Description: S3 key for asset version "ad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4"
+  AssetParametersad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4ArtifactHash3A1FAE82:
+    Type: String
+    Description: Artifact hash for asset "ad491858bff2daae3b82957d0d148f31813e6c8690bc56a59d64ce7f5f86fca4"
+  AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aS3Bucket4E6B0FF8:
+    Type: String
+    Description: S3 bucket for asset "a28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829a"
+  AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aS3VersionKey416B108B:
+    Type: String
+    Description: S3 key for asset version "a28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829a"
+  AssetParametersa28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829aArtifactHashF5E5BE0B:
+    Type: String
+    Description: Artifact hash for asset "a28cef2fa03a13fb8a3eb5c0bb8dc22495f0ab2d68c0436b1451ae578424829a"
 Outputs:
   presenceapi:
     Description: Presence api endpoint
@@ -1239,79 +2078,7 @@ Outputs:
       Name: presenceEndpoint
   region:
     Description: Presence api region
-    Value: us-east-1
+    Value: us-west-2
     Export:
       Name: region
-Conditions:
-  CDKMetadataAvailable:
-    Fn::Or:
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - af-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-northeast-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-northeast-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-southeast-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ap-southeast-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - ca-central-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - cn-north-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - cn-northwest-1
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-central-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-north-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-2
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - eu-west-3
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - me-south-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - sa-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-east-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-east-2
-      - Fn::Or:
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-west-1
-          - Fn::Equals:
-              - Ref: AWS::Region
-              - us-west-2
 
