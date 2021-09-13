@@ -57,19 +57,13 @@ async function decodeVerifyJwt(token, keys) {
         if (claim.iss !== cognitoIssuer) {
             throw new Error('Claim issuer is invalid');
         }
-        if (claim.token_use !== 'access') {
-            throw new Error('claim use is not access');
-        }
-        console.log(claim);
-        console.log(`Claim confirmed for ${claim.username}`);
         result = {
-            userName: claim['cognito:username'],
-            clientId: claim.client_id,
+            username: claim['cognito:username'],
+            email: claim['email'],
             isValid: true
         };
-        console.log(result);
     } catch (error) {
-        result = { userName: '', clientId: '', error, isValid: false };
+        result = { username: '', email: '', error, isValid: false };
     }
     return result;
 }

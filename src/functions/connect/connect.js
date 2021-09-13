@@ -10,21 +10,28 @@ const hset = promisify(redisPresence.hset).bind(redisPresence);
 let cacheKeys;
 
 exports.handler = async function(event) {
-    let userId;
+    let userId, decodedJwt;
     try {
         if (!cacheKeys) {
             cacheKeys = await getPublicKeys();
         }
-        userId = await decodeVerifyJwt(event.queryStringParameters.Authorization, cacheKeys);
+        decodedJwt = await decodeVerifyJwt(event.queryStringParameters.Authorization, cacheKeys);
+        userId = decodedJwt.username;
     } catch (error) {
-        console.log(error);
         return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
     }
-    console.log(userId);
+
+    if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
+        return { statusCode: 500, body: 'Authentication error' };
+    }
 
     // update connectId
     try {
-        await hset("connection", userId, event.requestContext.connectionId);
+        const commands = redisPresence.multi();
+        commands.hset("user_connection", userId, event.requestContext.connectionId);
+        commands.hset("connection_user", event.requestContext.connectionId, userId);
+        const execute = promisify(commands.exec).bind(commands);
+        await execute();
     } catch (error) {
         console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
@@ -34,4 +41,4 @@ exports.handler = async function(event) {
         statusCode: 200, 
         body: JSON.stringify({ connectionId: event.requestContext.connectionId })
     };
-}
+};

@@ -10,12 +10,13 @@ const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const zrange = promisify(redisPresence.zrange).bind(redisPresence);
 
 exports.handler = async function(event) {
-    let connectionIdArr = [];
+    let userConnectionIdArr = [];
+    let connectionUserIdArr = [];
     let pageArr = [];
     let statusObj = {};
     const userIdArr = [data.user1.user_id, data.user2.user_id, data.user3.user_id, data.user4.user_id];
     try {
-        connectionIdArr = await hmget("connection", userIdArr);
+        userConnectionIdArr = await hmget("user_connection", userIdArr);
         pageArr = await hmget("page", userIdArr);
         const result = await zrange("status", 0, 3, "withscores");
         console.log(result);
@@ -25,5 +26,5 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
 
-    return { statusCode: 200, body: { connectionIdArr, pageArr, statusObj } };
+    return { statusCode: 200, body: { userConnectionIdArr, pageArr, statusObj } };
 };
