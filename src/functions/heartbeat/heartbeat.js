@@ -76,7 +76,7 @@ exports.handler = async function(event) {
     // get connectionId of all friends
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
-        let connectionIdArr = await hmget("connection", friendIdArr);
+        let connectionIdArr = await hmget("user_connection", friendIdArr);
         connectionDataArr = connectionIdArr.map((x, i) => {
             return { friendId: friendIdArr[i], connectionId: x };
         }).filter(x => x.connectionId);
@@ -94,12 +94,12 @@ exports.handler = async function(event) {
         try {
             await apigwManagementApi.postToConnection({
                 ConnectionId: connectionId,
-                Data: { userId, url, title }
+                Data: JSON.stringify({ userId, url, title })
             }).promise();
         } catch (error) {
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("connection", friendId);
+                await hdel("user_connection", friendId);
             } else {
                 throw error;
             }
@@ -113,4 +113,4 @@ exports.handler = async function(event) {
     }
     
     return { statusCode: 200, body: 'Data sent' };
-}
+};

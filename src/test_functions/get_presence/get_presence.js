@@ -11,7 +11,6 @@ const zrange = promisify(redisPresence.zrange).bind(redisPresence);
 
 exports.handler = async function(event) {
     let userConnectionIdArr = [];
-    let connectionUserIdArr = [];
     let pageArr = [];
     let statusObj = {};
     const userIdArr = [data.user1.user_id, data.user2.user_id, data.user3.user_id, data.user4.user_id];

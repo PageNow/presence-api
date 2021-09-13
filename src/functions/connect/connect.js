@@ -5,7 +5,6 @@ const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jw
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
-const hset = promisify(redisPresence.hset).bind(redisPresence);
 
 let cacheKeys;
 

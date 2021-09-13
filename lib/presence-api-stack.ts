@@ -404,6 +404,12 @@ export class PresenceApiStack extends CDK.Stack {
                 resources: [connectionsArns]
             })
         );
+        this.getFn('test_heartbeat').addToRolePolicy(
+            new IAM.PolicyStatement({
+                actions: ['execute-api:ManageConnections'],
+                resources: [connectionsArns]
+            })
+        );
 
         /**
          * CloudFormation stack output
