@@ -14,15 +14,19 @@ exports.handler = async function(event) {
     if (eventData.url == undefined || eventData.url == null) {
         throw new Error("url is not included in the event body");
     }
-    if (eventData.title == undefined || eventData.title == undefined) {
+    if (eventData.title == undefined || eventData.title == null) {
         throw new Error("title is not included in the event body");
     }
-    if (eventData.userId == undefined || eventData.userId == undefined) {
+    if (eventData.userId == undefined || eventData.userId == null) {
         throw new Error("userId is not included in the event body");
+    }
+    if (eventData.eventType == undefined || eventData.eventType == null) {
+        throw new Error("eventType is not included in the event body");
     }
     const url = eventData.url;
     const title = eventData.title;
     const userId = eventData.userId;
+    const eventType = eventData.eventType;
 
     // Update status and page on redis
     try {
@@ -36,7 +40,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
 
-    if (event.body.updatePresence) {
+    if (eventType == 'update-presence') {
         // Get list of friends
         const client = new Client({
             user: process.env.DB_USER,
@@ -63,7 +67,7 @@ exports.handler = async function(event) {
             const values = [userId];
             let result = await client.query(text, values);
             console.log(result.rows);
-            friendIdArr = result.rows.map(x => x.userId1 === userId ? x.userId2 : x.userId1);
+            friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
         } catch (error) {
             await client.end();
             console.log(error);
