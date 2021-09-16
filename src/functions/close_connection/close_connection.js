@@ -11,6 +11,7 @@ exports.handler = async function(event) {
     try {
         const userId = await hget("connection_user", event.requestContext.connectionId);
         await hdel("user_connection", userId);
+        await hdel('status', userId);
     } catch (error) {
         console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };

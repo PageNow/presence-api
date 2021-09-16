@@ -224,7 +224,7 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda functions
         [ 
-            'heartbeat', 'status', 'disconnect', 'timeout', 'update_presence',
+            'heartbeat', 'status', 'disconnect', 'timeout',
             'connect', 'close_connection'
         ].forEach(
             (fn) => { this.addFunction(fn) }
@@ -380,11 +380,11 @@ export class PresenceApiStack extends CDK.Stack {
                 })
             }
         });
-        // webSocketApi.addRoute('update-presence', {
-        //     integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
-        //         handler: this.getFn('heartbeat'),
-        //     }),
-        // });
+        webSocketApi.addRoute('heartbeat', {
+            integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
+                handler: this.getFn('heartbeat'),
+            }),
+        });
 
         const apiStage = new ApiGateway.WebSocketStage(this, 'DevStage', {
             webSocketApi,

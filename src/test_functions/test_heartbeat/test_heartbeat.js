@@ -11,6 +11,8 @@ const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 const hset = promisify(redisPresence.hset).bind(redisPresence);
 
 exports.handler = async function(event) {
+    const domainName = '';
+    const stage = '';
     const userId = event && event.userId;
     if (userId === undefined || userId === null) {
         throw new Error("Missing argument 'userId'");
@@ -78,7 +80,7 @@ exports.handler = async function(event) {
 
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
-        endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+        endpoint: domainName + '/' + stage
     });
     // post to all connections
     const postCalls = connectionDataArr.map(async ({ friendId, connectionId }) => {

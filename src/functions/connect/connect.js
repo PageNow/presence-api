@@ -9,6 +9,7 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 let cacheKeys;
 
 exports.handler = async function(event) {
+    console.log(event.requestContext);
     let userId, decodedJwt;
     try {
         if (!cacheKeys) {
