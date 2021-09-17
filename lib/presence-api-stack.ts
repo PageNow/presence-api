@@ -225,7 +225,8 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda functions
         [ 
-            'heartbeat', 'timeout', 'connect', 'disconnect', 'close_connection', 'get_presence'
+            'heartbeat', 'timeout', 'connect', 'disconnect', 'close_connection',
+            'get_presence', 'get_user_presence', 'update_presence'
         ].forEach(
             (fn) => { this.addFunction(fn) }
         );
@@ -286,8 +287,13 @@ export class PresenceApiStack extends CDK.Stack {
         });
         webSocketApi.addRoute('heartbeat', {
             integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
-                handler: this.getFn('heartbeat'),
-            }),
+                handler: this.getFn('heartbeat')
+            })
+        });
+        webSocketApi.addRoute('update-presence', {
+            integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
+                handler: this.getFn('update_presence')
+            })
         });
         const apiStage = new ApiGatewayV2.WebSocketStage(this, 'DevStage', {
             webSocketApi,
@@ -340,6 +346,13 @@ export class PresenceApiStack extends CDK.Stack {
             'GET',
             new ApiGateway.LambdaIntegration(this.getFn('get_presence'), { proxy: true })
         );
+
+        const userPresenceRestResource = presenceRestResource.addResource('{userId}');
+        userPresenceRestResource.addMethod(
+            'GET',
+            new ApiGateway.LambdaIntegration(this.getFn('get_user_presence'), { proxy: true })
+        );
+
 
         /**
          * CloudFormation stack output

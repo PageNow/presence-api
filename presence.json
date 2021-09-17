@@ -1,6 +1,7 @@
 {
   "PresenceApiStack": {
-    "presenceapi": "https://ywnmh4jkm5eh7lpim42zffiewa.appsync-api.us-west-2.amazonaws.com/graphql",
-    "region": "us-west-2"
+    "websocketApiUrl": "wss://ynfidbnphl.execute-api.us-west-2.amazonaws.com",
+    "PresenceRestApiEndpoint99C79E96": "https://9wjs0qpgnb.execute-api.us-west-2.amazonaws.com/dev/",
+    "restApiUrl": "https://9wjs0qpgnb.execute-api.us-west-2.amazonaws.com/dev/"
   }
 }

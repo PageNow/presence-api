@@ -9,19 +9,18 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 let cacheKeys;
 
 exports.handler = async function(event) {
-    console.log(event.requestContext);
-    let userId, decodedJwt;
+    let userId;
     try {
         if (!cacheKeys) {
             cacheKeys = await getPublicKeys();
         }
-        decodedJwt = await decodeVerifyJwt(event.queryStringParameters.Authorization, cacheKeys);
+        const decodedJwt = await decodeVerifyJwt(event.queryStringParameters.Authorization, cacheKeys);
+        if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
+            return { statusCode: 500, body: 'Authentication error' };
+        }
         userId = decodedJwt.username;
     } catch (error) {
         return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
-    }
-    if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-        return { statusCode: 500, body: 'Authentication error' };
     }
 
     // update connectId

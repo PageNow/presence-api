@@ -1,18 +1,21 @@
 const redis = require('redis');
 const { promisify } = require('util');
-const _ = require('lodash');
 const { Client } = require('pg');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
-const hmget = promisify(redisPresence.hmget).bind(redisPresence);
+const hget = promisify(redisPresence.hget).bind(redisPresence);
 
 let cacheKeys;
 
 exports.handler = async function(event) {
-    console.log(event);
+    if (event.pathParameters.userId == undefined || event.pathParameters.userId == null) {
+        return { statusCode: 500, body: "Missing 'userId' in event pathParameters" };
+    }
+    const targetUserId = event.pathParameters.userId;
+
     let userId, decodedJwt;
     try {
         if (!cacheKeys) {
@@ -43,45 +46,34 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
     }
 
-    let friendIdArr = [];
-    try {
-        const text = `
-            SELECT * FROM friendship_table
-            WHERE (user_id1 = $1 OR user_id2 = $1) AND
-                accepted_at IS NOT NULL
-        `;
-        const values = [userId];
-        let result = await client.query(text, values);
-        console.log(result.rows);
-        friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
-        friendIdArr.push(userId);
-    } catch (error) {
+    if (userId !== targetUserId) { // check if the user is friends with the target user
+        try {
+            const text = `
+                SELECT * FROM friendship_table
+                WHERE (user_id1 = $1 AND user_id2 = $2 AND accepted_at IS NOT NULL) OR
+                    (user_id1 = $2 AND user_id2 = $1 AND accepted_at IS NOT NULL)
+            `;
+            const values = [userId, targetUserId];
+            const result = await client.query(text, values);
+            if (result.rows.length == 0) {
+                await client.end();
+                return { statusCode: 403, body: 'Forbidden access to user presence' };
+            }            
+        } catch (error) {
+            await client.end();
+            console.log(error);
+            return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        }
         await client.end();
-        console.log(error);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
     }
-    await client.end();
-    console.log(friendIdArr);
-    
-    let pageArr = [];
+
     try {
-        pageArr = await hmget("page", friendIdArr);
+        let presence = await hget("page", targetUserId);
+        if (presence == undefined || presence == null) {
+            presence = JSON.parse(presence);
+        }
+        return { statusCode: 200, body: { presence } };
     } catch (error) {
-        console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
-    if (pageArr.length !== friendIdArr.length) {
-        return { statusCode: 500, body: 'Redis error' };
-    }
-
-    const presence = {};
-    friendIdArr.forEach((key, i) => {
-        if (pageArr[i] == undefined || pageArr[i] == null) {
-            presence[key] = null;
-        } else {
-            presence[key] = JSON.parse(pageArr[i]);
-        }
-    });
-
-    return { statusCode: 200, body: { presence } };
 };
