@@ -20,7 +20,6 @@ exports.handler = async function(event) {
     } catch (error) {
         return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
     }
-
     if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
         return { statusCode: 500, body: 'Authentication error' };
     }

@@ -9,7 +9,8 @@ import * as AppSync from '@aws-cdk/aws-appsync';
 import * as AwsEvents from '@aws-cdk/aws-events';
 import * as AwsEventsTargets from '@aws-cdk/aws-events-targets';
 import * as Cognito from '@aws-cdk/aws-cognito';
-import * as ApiGateway from '@aws-cdk/aws-apigatewayv2';
+import * as ApiGateway from '@aws-cdk/aws-apigateway';
+import * as ApiGatewayV2 from '@aws-cdk/aws-apigatewayv2';
 import * as RDS from '@aws-cdk/aws-rds';
 import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations';
 
@@ -213,7 +214,7 @@ export class PresenceApiStack extends CDK.Stack {
 
         /**
          * Lambda functions creation
-         * - Define the layer to add nodejs redis module
+         * - Define the layer to add nodejs layer module
          * - Add the functions
          */
         this.lambdaLayer = new Lambda.LayerVersion(this, "lambdaModule", {
@@ -224,8 +225,7 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda functions
         [ 
-            'heartbeat', 'status', 'disconnect', 'timeout',
-            'connect', 'close_connection'
+            'heartbeat', 'timeout', 'connect', 'disconnect', 'close_connection', 'get_presence'
         ].forEach(
             (fn) => { this.addFunction(fn) }
         );
@@ -233,142 +233,46 @@ export class PresenceApiStack extends CDK.Stack {
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
             'add_users', 'add_friendship', 'test_connect', 'test_heartbeat',
-            'get_presence', 'get_user_info'
+            'read_presence', 'read_user_info'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
-        this.addFunction("on_disconnect", false);
-
-        /**
-         * Retrieve existing user pool
-         */
-        const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', cognitoPoolId!);
-
-        /**
-         * GraphQL API
-         */
-        this.api = new AppSync.GraphqlApi(this, "PresenceAPI", {
-            name: "PresenceAPI",
-            authorizationConfig: {
-                // TODO: change to COGNITO                
-                defaultAuthorization: {
-                    authorizationType: AppSync.AuthorizationType.USER_POOL,
-                    userPoolConfig: {
-                        userPool: userPool
-                    }
-                },
-                additionalAuthorizationModes: [
-                    { authorizationType: AppSync.AuthorizationType.IAM }
-                ]
-            },
-            schema: PresenceSchema(),
-            logConfig: { fieldLogLevel: AppSync.FieldLogLevel.ALL }
-        });
-
-        // Configure sources and resolvers
-        const heartbeatDS = this.createResolver("Query", "heartbeat", { source: "heartbeat" });
-        this.createResolver("Query", "status", { source: "status" });
-        this.createResolver("Mutation", "connect", { source: heartbeatDS });
-        this.createResolver("Mutation", "disconnect", { source: "disconnect" });
-
-        /**
-         * Configure "disconnected" mutation
-         * 
-         * "disconnected" mutation is called on disconnection and is subscribed by AppSync client.
-         * It uses a NoneDataSource with simple templates passing its argument so that it
-         * triggers notifications.
-         */
-        const noneDS = this.api.addNoneDataSource("disconnectedDS");
-        const requestMappingTemplate = AppSync.MappingTemplate.fromString(`
-            {
-                "version": "2017-02-28",
-                "payload": {
-                    "userId": "$context.arguments.userId",
-                    "status": "offline",
-                    "url": "",
-                    "title": ""
-                }
-            }
-        `);
-        const responseMappingTemplate = AppSync.MappingTemplate.fromString(`
-            $util.toJson($context.result)
-        `);
-        this.createResolver("Mutation", "disconnected", {
-            source: noneDS,
-            requestMappingTemplate,
-            responseMappingTemplate
-        });
 
         /**
          * Event bus
+         * - Invoke Lambda functions regularly
          */
-        const presenceBus = new AwsEvents.EventBus(this, "PresenceBus");
+        const presenceEventBus = new AwsEvents.EventBus(this, "PresenceEventBus");
         // Rule to trigger lambda timeout every minute
         new AwsEvents.Rule(this, "PresenceTimeoutRule", {
             schedule: AwsEvents.Schedule.cron({ hour: "*" }),
             targets: [ new AwsEventsTargets.LambdaFunction(this.getFn("timeout")) ],
             enabled: true
         });
-        // Rule for disconnection event - triggers on_disconnect lambda function
-        // according to the given pattern
-        new AwsEvents.Rule(this, "PresenceDisconnectRule", {
-            eventBus: presenceBus,
-            description: "Rule for presence disconnection",
-            eventPattern: {
-                detailType: ["presence.disconnected"],
-                source: ["api.presence"]
-            },
-            targets: [ new AwsEventsTargets.LambdaFunction(this.getFn("on_disconnect")) ],
-            enabled: true
-        });
-        // Add an interface endpoint for EventBridge
-        // Allows the lambda inside VPC to call EventBridge without requiring a NAT Gateway
-        // Requires a security group that allows TCP 80 communications from the Lambda security groups
-        const eventsEndPointSG = new EC2.SecurityGroup(this, "eventsEndPointSG", {
-            vpc: this.vpc,
-            description: "EventBridge interface endpoint SG"
-        });
-        eventsEndPointSG.addIngressRule(this.lambdaSG, EC2.Port.tcp(80));
-        this.vpc.addInterfaceEndpoint("eventsEndPoint", {
-            service: EC2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
-            subnets: { subnets: [ this.privateSubnet1, this.privateSubnet2 ] },
-            securityGroups: [ eventsEndPointSG ]
-        });
 
         /**
          * Finalize configuration for Lambda functions
          * - Add environment variables to access api
-         * - Add IAM policy statement for GraphQL access
          * - Add IAM policy statement for event bus access (putEvents)
          * - Add timeout
          */
         const allowEventBridge = new IAM.PolicyStatement({ effect: IAM.Effect.ALLOW });
         allowEventBridge.addActions("events:PutEvents");
-        allowEventBridge.addResources(presenceBus.eventBusArn);
+        allowEventBridge.addResources(presenceEventBus.eventBusArn);
 
-        this.getFn("timeout").addEnvironment("TIMEOUT", "10000")
-            .addEnvironment("EVENT_BUS", presenceBus.eventBusName)
+        this.getFn("timeout")
+            .addEnvironment("TIMEOUT", "10000")
+            .addEnvironment("EVENT_BUS", presenceEventBus.eventBusName)
             .addToRolePolicy(allowEventBridge);
 
-        this.getFn("disconnect")
-            .addEnvironment("EVENT_BUS", presenceBus.eventBusName)
-            .addToRolePolicy(allowEventBridge);
-
-        this.getFn("heartbeat")
-            .addEnvironment("EVENT_BUS", presenceBus.eventBusName)
-            .addToRolePolicy(allowEventBridge);
-
-        const allowAppSync = new IAM.PolicyStatement({ effect: IAM.Effect.ALLOW });
-        allowAppSync.addActions("appsync:GraphQL");
-        allowAppSync.addResources(this.api.arn + "/*");
-        this.getFn("on_disconnect")
-            .addEnvironment("GRAPHQL_ENDPOINT", this.api.graphqlUrl)
-            .addToRolePolicy(allowAppSync);
+        // this.getFn("disconnect")
+        //     .addEnvironment("EVENT_BUS", presenceEventBus.eventBusName)
+        //     .addToRolePolicy(allowEventBridge);
 
         /**
-         * API Gateway
+         * API Gateway for real-time presence websocket
          */
-        const webSocketApi = new ApiGateway.WebSocketApi(this, 'PresenceWebsocketApi', {
+        const webSocketApi = new ApiGatewayV2.WebSocketApi(this, 'PresenceWebsocketApi', {
             connectRouteOptions: {
                 integration: new ApiGatewayIntegrations.LambdaWebSocketIntegration({
                     handler: this.getFn('connect')
@@ -385,8 +289,7 @@ export class PresenceApiStack extends CDK.Stack {
                 handler: this.getFn('heartbeat'),
             }),
         });
-
-        const apiStage = new ApiGateway.WebSocketStage(this, 'DevStage', {
+        const apiStage = new ApiGatewayV2.WebSocketStage(this, 'DevStage', {
             webSocketApi,
             stageName: 'dev',
             autoDeploy: true,
@@ -412,30 +315,42 @@ export class PresenceApiStack extends CDK.Stack {
         );
 
         /**
+         * API Gateway for Presence REST endpoint
+         */
+        const restApi = new ApiGateway.RestApi(this, 'PresenceRestApi', {
+            deploy: true,
+            deployOptions: {
+                stageName: 'dev'
+            },
+            defaultCorsPreflightOptions: {
+                allowHeaders: [
+                  'Content-Type',
+                  'X-Amz-Date',
+                  'Authorization',
+                  'X-Api-Key',
+                ],
+                allowMethods: ['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+                allowCredentials: true,
+                allowOrigins: ['http://localhost:4200'],
+            },
+        });
+
+        const presenceRestResource = restApi.root.addResource('presence');
+        presenceRestResource.addMethod(
+            'GET',
+            new ApiGateway.LambdaIntegration(this.getFn('get_presence'), { proxy: true })
+        );
+
+        /**
          * CloudFormation stack output
-         * 
-         * Contains:
-         * - GraphQL API Endpoint
-         * - API Key for the integration tests (could be removed in production)
-         * - Region (required to configure AppSync client in integration tests)
-         * 
          * Use the `-O, --output-file` option with `cdk deploy` to output those in a JSON file
          * or use `npm run deploy` to use this option as default
          */
-        new CDK.CfnOutput(this, "presence-api", {
-            value: this.api.graphqlUrl,
-            description: "Presence api endpoint",
-            exportName: "presenceEndpoint"
+        new CDK.CfnOutput(this, 'websocketApiUrl', {
+            value: webSocketApi.apiEndpoint
         });
-        // new CDK.CfnOutput(this, "api-key", {
-        //     value: this.api.apiKey || '',
-        //     description: "Presence api key",
-        //     exportName: "apiKey"
-        // });
-        new CDK.CfnOutput(this, "region", {
-            value: process.env.CDK_DEFAULT_REGION || '',
-            description: "Presence api region",
-            exportName: "region"
+        new CDK.CfnOutput(this, 'restApiUrl', {
+            value: restApi.url
         });
     }
 }

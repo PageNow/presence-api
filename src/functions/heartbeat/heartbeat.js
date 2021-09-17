@@ -11,6 +11,7 @@ const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
+    console.log('eventData', eventData);
     if (eventData.url == undefined || eventData.url == null) {
         throw new Error("url is not included in the event body");
     }
@@ -66,7 +67,6 @@ exports.handler = async function(event) {
             `;
             const values = [userId];
             let result = await client.query(text, values);
-            console.log(result.rows);
             friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
         } catch (error) {
             await client.end();
