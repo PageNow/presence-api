@@ -9,10 +9,18 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 const hget = promisify(redisPresence.hget).bind(redisPresence);
 
 let cacheKeys;
+const responseHeader = {
+    "Access-Control-Allow-Origin": "*",
+};
 
 exports.handler = async function(event) {
+    console.log(event);
     if (event.pathParameters.userId == undefined || event.pathParameters.userId == null) {
-        return { statusCode: 500, body: "Missing 'userId' in event pathParameters" };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: "Missing 'userId' in event pathParameters"
+        };
     }
     const targetUserId = event.pathParameters.userId;
 
@@ -21,13 +29,18 @@ exports.handler = async function(event) {
         if (!cacheKeys) {
             cacheKeys = await getPublicKeys();
         }
-        decodedJwt = await decodeVerifyJwt(event.request.headers.authorization, cacheKeys);
+        decodedJwt = await decodeVerifyJwt(event.headers.Authorization, cacheKeys);
         userId = decodedJwt.username;
     } catch (error) {
-        return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
+        console.log(error);
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'JWT decode error: ' + JSON.stringify(error)
+        };
     }
     if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-        return { statusCode: 500, body: 'Authentication error' };
+        return { statusCode: 500, headers: responseHeader, body: 'Authentication error' };
     }
     console.log(userId);
 
@@ -39,15 +52,9 @@ exports.handler = async function(event) {
         port: parseInt(process.env.DB_PORT, 10) || 5432,
         ssl: true
     });
-    try {
-        await client.connect();
-    } catch (err) {
-        console.log(err);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
-    }
-
     if (userId !== targetUserId) { // check if the user is friends with the target user
         try {
+            await client.connect();
             const text = `
                 SELECT * FROM friendship_table
                 WHERE (user_id1 = $1 AND user_id2 = $2 AND accepted_at IS NOT NULL) OR
@@ -57,12 +64,20 @@ exports.handler = async function(event) {
             const result = await client.query(text, values);
             if (result.rows.length == 0) {
                 await client.end();
-                return { statusCode: 403, body: 'Forbidden access to user presence' };
+                return {
+                    statusCode: 403,
+                    headers: responseHeader,
+                    body: 'Forbidden access to user presence'
+                };
             }            
         } catch (error) {
             await client.end();
             console.log(error);
-            return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+            return {
+                statusCode: 500,
+                headers: responseHeader,
+                body: 'Database error: ' + JSON.stringify(error)
+            };
         }
         await client.end();
     }
@@ -72,8 +87,16 @@ exports.handler = async function(event) {
         if (presence == undefined || presence == null) {
             presence = JSON.parse(presence);
         }
-        return { statusCode: 200, body: { presence } };
+        return {
+            statusCode: 200,
+            headers: responseHeader,
+            body: JSON.stringify(presence)
+        };
     } catch (error) {
-        return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'Redis error: ' + JSON.stringify(error)
+        };
     }
 };

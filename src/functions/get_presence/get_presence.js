@@ -1,6 +1,5 @@
 const redis = require('redis');
 const { promisify } = require('util');
-const _ = require('lodash');
 const { Client } = require('pg');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 
@@ -10,21 +9,33 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 
 let cacheKeys;
+const responseHeader = {
+    "Access-Control-Allow-Origin": "*",
+};
 
 exports.handler = async function(event) {
-    console.log(event);
-    let userId, decodedJwt;
+    let userId;
     try {
         if (!cacheKeys) {
             cacheKeys = await getPublicKeys();
         }
-        decodedJwt = await decodeVerifyJwt(event.request.headers.authorization, cacheKeys);
+        const decodedJwt = await decodeVerifyJwt(event.headers.Authorization, cacheKeys);
+        console.log(decodedJwt);
+        if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
+            console.log('Authorization error');
+            return {
+                statusCode: 500,
+                headers: responseHeader,
+                body: 'Authentication error'
+            };
+        }
         userId = decodedJwt.username;
     } catch (error) {
-        return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
-    }
-    if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-        return { statusCode: 500, body: 'Authentication error' };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'JWT decode error: ' + JSON.stringify(error)
+        };
     }
     console.log(userId);
 
@@ -40,7 +51,11 @@ exports.handler = async function(event) {
         await client.connect();
     } catch (err) {
         console.log(err);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'Database error: ' + JSON.stringify(err)
+        };
     }
 
     let friendIdArr = [];
@@ -58,20 +73,32 @@ exports.handler = async function(event) {
     } catch (error) {
         await client.end();
         console.log(error);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'Database error: ' + JSON.stringify(error)
+        };
     }
     await client.end();
-    console.log(friendIdArr);
-    
+
     let pageArr = [];
     try {
         pageArr = await hmget("page", friendIdArr);
     } catch (error) {
         console.log(error);
-        return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'Redis error: ' + JSON.stringify(error)
+        };
     }
+    console.log(pageArr);
     if (pageArr.length !== friendIdArr.length) {
-        return { statusCode: 500, body: 'Redis error' };
+        return {
+            statusCode: 500,
+            headers: responseHeader,
+            body: 'Redis error'
+        };
     }
 
     const presence = {};
@@ -82,6 +109,11 @@ exports.handler = async function(event) {
             presence[key] = JSON.parse(pageArr[i]);
         }
     });
+    console.log(presence);
 
-    return { statusCode: 200, body: { presence } };
+    return {
+        statusCode: 200,
+        headers: responseHeader,
+        body: JSON.stringify(presence)
+    };
 };

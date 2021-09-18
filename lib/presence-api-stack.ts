@@ -321,6 +321,14 @@ export class PresenceApiStack extends CDK.Stack {
         );
 
         /**
+         * Retrieve existing user pool
+         */
+        // const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', cognitoPoolId!);
+        // const apiAuthorizer = new ApiGateway.CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
+        //     cognitoUserPools: [ userPool ]
+        // });
+
+        /**
          * API Gateway for Presence REST endpoint
          */
         const restApi = new ApiGateway.RestApi(this, 'PresenceRestApi', {
@@ -339,6 +347,10 @@ export class PresenceApiStack extends CDK.Stack {
                 allowCredentials: true,
                 allowOrigins: ['http://localhost:4200'],
             },
+            // defaultMethodOptions: {
+            //     authorizationType: ApiGateway.AuthorizationType.COGNITO,
+            //     authorizer: apiAuthorizer,
+            // }
         });
 
         const presenceRestResource = restApi.root.addResource('presence');
