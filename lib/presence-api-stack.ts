@@ -307,18 +307,14 @@ export class PresenceApiStack extends CDK.Stack {
             resource: webSocketApi.apiId,
         });
 
-        this.getFn('heartbeat').addToRolePolicy(
-            new IAM.PolicyStatement({
-                actions: ['execute-api:ManageConnections'],
-                resources: [connectionsArns]
-            })
-        );
-        this.getFn('test_heartbeat').addToRolePolicy(
-            new IAM.PolicyStatement({
-                actions: ['execute-api:ManageConnections'],
-                resources: [connectionsArns]
-            })
-        );
+        [ 'update_presence', 'test_heartbeat' ].forEach(fn => {
+            this.getFn(fn).addToRolePolicy(
+                new IAM.PolicyStatement({
+                    actions: ['execute-api:ManageConnections'],
+                    resources: [connectionsArns]
+                })
+            );
+        });
 
         /**
          * Retrieve existing user pool

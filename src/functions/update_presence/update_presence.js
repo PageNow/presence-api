@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
+const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 const { Client } = require('pg');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
@@ -8,6 +9,8 @@ const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
+
+let cacheKeys;
 
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
@@ -27,7 +30,7 @@ exports.handler = async function(event) {
         if (!cacheKeys) {
             cacheKeys = await getPublicKeys();
         }
-        const decodedJwt = await decodeVerifyJwt(event.queryStringParameters.Authorization, cacheKeys);
+        const decodedJwt = await decodeVerifyJwt(eventData.jwt, cacheKeys);
         if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
             return { statusCode: 500, body: 'Authentication error' };
         }
@@ -82,6 +85,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
     }
     await client.end();
+    console.log('friendIdArr', friendIdArr);
 
     // get connectionId of all friends
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
@@ -95,6 +99,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
     }
     connectionDataArr.push({ friendId: userId, connectionId: event.requestContext.connectionId });
+    console.log('connectionDataArr', connectionDataArr);
 
     // post to all connections
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
@@ -102,6 +107,8 @@ exports.handler = async function(event) {
         endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
     });
     const postCalls = connectionDataArr.map(async ({ friendId, connectionId }) => {
+        console.log(friendId);
+        console.log(connectionId);
         try {
             await apigwManagementApi.postToConnection({
                 ConnectionId: connectionId,
@@ -112,7 +119,9 @@ exports.handler = async function(event) {
                     title: title
                 })
             }).promise();
+            console.log('posted to connection');
         } catch (error) {
+            console.log(error);
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
                 await hdel("user_connection", friendId).promise();
