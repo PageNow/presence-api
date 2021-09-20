@@ -116,7 +116,8 @@ exports.handler = async function(event) {
                     type: 'update-presence',
                     userId: userId,
                     url: url,
-                    title: title
+                    title: title,
+                    domain: ''
                 })
             }).promise();
             console.log('posted to connection');

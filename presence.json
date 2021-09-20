@@ -1,7 +1,7 @@
 {
   "PresenceApiStack": {
-    "websocketApiUrl": "wss://io6oef1762.execute-api.us-west-2.amazonaws.com",
-    "PresenceRestApiEndpoint99C79E96": "https://zyz4giy4oi.execute-api.us-west-2.amazonaws.com/dev/",
-    "restApiUrl": "https://zyz4giy4oi.execute-api.us-west-2.amazonaws.com/dev/"
+    "websocketApiUrl": "wss://2o6961o5ai.execute-api.us-west-2.amazonaws.com",
+    "PresenceRestApiEndpoint99C79E96": "https://rxrfb9g7cd.execute-api.us-west-2.amazonaws.com/dev/",
+    "restApiUrl": "https://rxrfb9g7cd.execute-api.us-west-2.amazonaws.com/dev/"
   }
 }

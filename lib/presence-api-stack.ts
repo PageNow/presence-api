@@ -233,8 +233,8 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
-            'add_users', 'add_friendship', 'test_connect', 'test_heartbeat',
-            'read_presence', 'read_user_info'
+            'add_users', 'add_friendship', 'test_connect', 'test_update_presence',
+            'read_presence', 'read_user_info', 'test_sql'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
@@ -307,7 +307,7 @@ export class PresenceApiStack extends CDK.Stack {
             resource: webSocketApi.apiId,
         });
 
-        [ 'update_presence', 'test_heartbeat' ].forEach(fn => {
+        [ 'update_presence', 'test_update_presence' ].forEach(fn => {
             this.getFn(fn).addToRolePolicy(
                 new IAM.PolicyStatement({
                     actions: ['execute-api:ManageConnections'],

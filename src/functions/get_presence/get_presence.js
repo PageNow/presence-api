@@ -59,17 +59,27 @@ exports.handler = async function(event) {
     }
 
     let friendIdArr = [];
+    let userInfoMap = {};
     try {
-        const text = `
-            SELECT * FROM friendship_table
+        let text = `
+            SELECT user_id1, user_id2 FROM friendship_table
             WHERE (user_id1 = $1 OR user_id2 = $1) AND
                 accepted_at IS NOT NULL
         `;
-        const values = [userId];
+        let values = [userId];
         let result = await client.query(text, values);
         console.log(result.rows);
         friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
         friendIdArr.push(userId);
+
+        text = `
+            SELECT user_id, first_name, middle_name, last_name, profile_image_extension
+            FROM user_table
+            WHERE user_id = ANY ($1)
+        `;
+        result = await client.query(text, [friendIdArr]);
+        userInfoMap = result.rows.map(x => userInfoMap[x.user_id] = x);
+        console.log(userInfoMap);
     } catch (error) {
         await client.end();
         console.log(error);
@@ -107,13 +117,36 @@ exports.handler = async function(event) {
             presence[key] = null;
         } else {
             presence[key] = JSON.parse(pageArr[i]);
+            let domain;
+            try {
+                domain = new URL(pageArr[i]['url']);
+                domain = domain.hostname;
+            } catch (error) {
+                domain = '';
+            }
+            presence[key]['domain'] = domain;
         }
     });
     console.log(presence);
 
+    const presenceArr = [];
+    for (const friendId of friendIdArr) {
+        if (friendId === userId) { continue; }
+        if (presence[friendId]) {
+            presenceArr.unshift(presence[friendId]);
+        } else {
+            presenceArr.push(presence[friendId]);
+        }
+    }
+    console.log(presenceArr);
+
     return {
         statusCode: 200,
         headers: responseHeader,
-        body: JSON.stringify(presence)
+        body: JSON.stringify({
+            userPresence: presence[userId],
+            presenceArr: presenceArr,
+            userInfoMap: userInfoMap
+        })
     };
 };

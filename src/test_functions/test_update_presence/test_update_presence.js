@@ -59,6 +59,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
     }
     await client.end();
+    friendIdArr.push(userId);
 
     try {
         hset('page', userId, JSON.stringify({url: url, title: title}));
@@ -87,7 +88,10 @@ exports.handler = async function(event) {
         try {
             await apigwManagementApi.postToConnection({
                 ConnectionId: connectionId,
-                Data: JSON.stringify({ userId, url, title })
+                Data: JSON.stringify({
+                    type: 'update-presence',
+                    userId, url, title
+                })
             }).promise();
         } catch (error) {
             if (error.statusCode === 410) {
