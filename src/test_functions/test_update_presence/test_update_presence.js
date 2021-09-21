@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
+const psl = require('psl');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
@@ -11,8 +12,6 @@ const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 const hset = promisify(redisPresence.hset).bind(redisPresence);
 
 exports.handler = async function(event) {
-    const domainName = '';
-    const stage = '';
     const userId = event && event.userId;
     if (userId === undefined || userId === null) {
         throw new Error("Missing argument 'userId'");
@@ -21,9 +20,26 @@ exports.handler = async function(event) {
     if (url === undefined || url === null) {
         throw new Error("Missing argument 'url'");
     }
+    let domain = '';
+    try {
+        const urlObj = new URL(url);
+        const parsed = psl.parse(urlObj.hostname);
+        domain = parsed.domain;
+    } catch (error) {
+        console.log(error);
+    }
+
     const title = event && event.title;
     if (title === undefined || title === null) {
         throw new Error("Missing argument 'title'");
+    }
+    const domainName = event && event.domainName;
+    if (domainName === undefined || domainName === null) {
+        throw new Error("Missing argument 'domainName'");
+    }
+    const stage = event && event.stage;
+    if (stage === undefined || stage === null) {
+        throw new Error("Missing argument 'stage'");
     }
 
     // Get list of friends
@@ -32,7 +48,7 @@ exports.handler = async function(event) {
         host: process.env.DB_HOST,
         database: process.env.DB_DATABASE,
         password: process.env.DB_PASSWORD,
-        port: parseInt(process.env.DB_PORT) || 5432,
+        port: parseInt(process.env.DB_PORT, 10) || 5432,
         ssl: true
     });
     try {
@@ -90,7 +106,7 @@ exports.handler = async function(event) {
                 ConnectionId: connectionId,
                 Data: JSON.stringify({
                     type: 'update-presence',
-                    userId, url, title
+                    userId, url, title, domain
                 })
             }).promise();
         } catch (error) {

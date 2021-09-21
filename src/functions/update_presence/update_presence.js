@@ -3,6 +3,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 const { Client } = require('pg');
+const psl = require('psl');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
@@ -40,6 +41,14 @@ exports.handler = async function(event) {
     }
     const url = eventData.url;
     const title = eventData.title;
+    let domain = '';
+    try {
+        const urlObj = new URL(url);
+        const parsed = psl.parse(urlObj.hostname);
+        domain = parsed.domain;
+    } catch (error) {
+        console.log(error);
+    }
 
     // Update status and page on redis
     try {
@@ -117,7 +126,7 @@ exports.handler = async function(event) {
                     userId: userId,
                     url: url,
                     title: title,
-                    domain: ''
+                    domain: domain
                 })
             }).promise();
             console.log('posted to connection');

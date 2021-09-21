@@ -59,7 +59,7 @@ exports.handler = async function(event) {
     }
 
     let friendIdArr = [];
-    let userInfoMap = {};
+    let userInfoMap = {}; // map of userinfo of friends and yourself
     try {
         let text = `
             SELECT user_id1, user_id2 FROM friendship_table
@@ -78,7 +78,7 @@ exports.handler = async function(event) {
             WHERE user_id = ANY ($1)
         `;
         result = await client.query(text, [friendIdArr]);
-        userInfoMap = result.rows.map(x => userInfoMap[x.user_id] = x);
+        result.rows.forEach(x => userInfoMap[x.user_id] = x);
         console.log(userInfoMap);
     } catch (error) {
         await client.end();
@@ -113,10 +113,16 @@ exports.handler = async function(event) {
 
     const presence = {};
     friendIdArr.forEach((key, i) => {
-        if (pageArr[i] == undefined || pageArr[i] == null) {
-            presence[key] = null;
-        } else {
-            presence[key] = JSON.parse(pageArr[i]);
+        if (pageArr[i] == undefined || pageArr[i] == null) { // offline
+            presence[key] = {
+                userId: key,
+                page: null
+            };
+        } else { // online
+            presence[key] = {
+                userId: key,
+                page: JSON.parse(pageArr[i])
+            };
             let domain;
             try {
                 domain = new URL(pageArr[i]['url']);
@@ -132,9 +138,14 @@ exports.handler = async function(event) {
     const presenceArr = [];
     for (const friendId of friendIdArr) {
         if (friendId === userId) { continue; }
+        // if (presence[friendId]) {
+        //     presenceArr.unshift(presence[friendId]);
+        // } else {
+        //     presenceArr.push(presence[friendId]);
+        // }
+
+        // only return presence info of online friends
         if (presence[friendId]) {
-            presenceArr.unshift(presence[friendId]);
-        } else {
             presenceArr.push(presence[friendId]);
         }
     }
