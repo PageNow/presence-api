@@ -2,6 +2,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
+const psl = require('psl');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
@@ -119,18 +120,20 @@ exports.handler = async function(event) {
                 page: null
             };
         } else { // online
+            const page = JSON.parse(pageArr[i]);
             presence[key] = {
                 userId: key,
-                page: JSON.parse(pageArr[i])
+                page: page
             };
             let domain;
             try {
-                domain = new URL(pageArr[i]['url']);
-                domain = domain.hostname;
+                const urlObj = new URL(page.url);
+                const parsed = psl.parse(urlObj.hostname);
+                domain = parsed.domain;
             } catch (error) {
-                domain = '';
+                console.log(error);
             }
-            presence[key]['domain'] = domain;
+            presence[key].page['domain'] = domain;
         }
     });
     console.log(presence);

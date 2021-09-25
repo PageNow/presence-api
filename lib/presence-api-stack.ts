@@ -99,25 +99,6 @@ export class PresenceApiStack extends CDK.Stack {
     };
 
     /**
-     * Creates a resolver.
-     * 
-     * A resolver attaches a data source to a specific field in the schema.
-     * 
-     * @param typeName - type (e.g. Query, Mutation)
-     * @param fieldName - resolvable fields
-     * @param options - ResolverOptions
-     */
-    private createResolver = (typeName: string, fieldName: string, options: ResolverOptions)
-        :AppSync.BaseDataSource => {
-        let source = (typeof(options.source) === 'string') ?
-            this.api.addLambdaDataSource(`${options.source}DS`, this.getFn(options.source)) :
-            options.source;
-
-        source.createResolver({ typeName, fieldName, ...options });
-        return source;
-    }
-
-    /**
      * Stack constructor
      * 
      * @param scope 
@@ -200,8 +181,8 @@ export class PresenceApiStack extends CDK.Stack {
             description: "Subnet Group for Redis Cluster",
             subnetIds: [ redisSubnet1.subnetId, redisSubnet2.subnetId ]
         });
-        this.redisCluster = new ElasticCache.CfnReplicationGroup(this, "PresenceCluster", {
-            replicationGroupDescription: "PresenceReplicationGroup",
+        this.redisCluster = new ElasticCache.CfnReplicationGroup(this, "PagenowCluster", {
+            replicationGroupDescription: "PagenowReplicationGroup",
             cacheNodeType: "cache.t3.small",
             engine: "redis",
             numCacheClusters: 2,

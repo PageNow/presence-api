@@ -9,8 +9,9 @@ const hget = promisify(redisPresence.hget).bind(redisPresence);
 
 exports.handler = async function(event) {
     try {
-        const userId = await hget("connection_user", event.requestContext.connectionId);
-        await hdel("user_connection", userId);
+        const userId = await hget("presence_connection_user", event.requestContext.connectionId);
+        await hdel("presence_user_connection", userId);
+        await hdel("presence_connection_user", event.requestContext.connectionId)
         await hdel('status', userId);
     } catch (error) {
         console.log(error);

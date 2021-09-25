@@ -26,8 +26,8 @@ exports.handler = async function(event) {
     // update connectId
     try {
         const commands = redisPresence.multi();
-        commands.hset("user_connection", userId, event.requestContext.connectionId);
-        commands.hset("connection_user", event.requestContext.connectionId, userId);
+        commands.hset("presence_user_connection", userId, event.requestContext.connectionId);
+        commands.hset("presence_connection_user", event.requestContext.connectionId, userId);
         const execute = promisify(commands.exec).bind(commands);
         await execute();
     } catch (error) {

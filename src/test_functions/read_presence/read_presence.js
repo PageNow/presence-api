@@ -15,7 +15,7 @@ exports.handler = async function(event) {
     let statusObj = {};
     const userIdArr = [data.user1.user_id, data.user2.user_id, data.user3.user_id, data.user4.user_id];
     try {
-        userConnectionIdArr = await hmget("user_connection", userIdArr);
+        userConnectionIdArr = await hmget("presence_user_connection", userIdArr);
         pageArr = await hmget("page", userIdArr);
         const result = await zrange("status", 0, 3, "withscores");
         console.log(result);

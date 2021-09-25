@@ -99,7 +99,7 @@ exports.handler = async function(event) {
     // get connectionId of all friends
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
-        let connectionIdArr = await hmget("user_connection", friendIdArr);
+        const connectionIdArr = await hmget("presence_user_connection", friendIdArr);
         connectionDataArr = connectionIdArr.map((x, i) => {
             return { friendId: friendIdArr[i], connectionId: x };
         }).filter(x => x.connectionId);
@@ -129,12 +129,12 @@ exports.handler = async function(event) {
                     domain: domain
                 })
             }).promise();
-            console.log('posted to connection');
         } catch (error) {
             console.log(error);
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("user_connection", friendId).promise();
+                await hdel("presence_user_connection", friendId).promise();
+                await hdel("presence_connection_user", connectionId).promise();
             } else {
                 throw error;
             }
