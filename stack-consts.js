@@ -1,7 +1,0 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.rdsPort = exports.rdsSgId = exports.pagenowVpcId = void 0;
-exports.pagenowVpcId = 'vpc-030e62bc2435571fc';
-exports.rdsSgId = 'sg-08711318ea5feb42f';
-exports.rdsPort = 5432;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic3RhY2stY29uc3RzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsic3RhY2stY29uc3RzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFhLFFBQUEsWUFBWSxHQUFHLHVCQUF1QixDQUFDO0FBRXZDLFFBQUEsT0FBTyxHQUFHLHNCQUFzQixDQUFDO0FBRWpDLFFBQUEsT0FBTyxHQUFHLElBQUksQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjb25zdCBwYWdlbm93VnBjSWQgPSAndnBjLTAzMGU2MmJjMjQzNTU3MWZjJztcblxuZXhwb3J0IGNvbnN0IHJkc1NnSWQgPSAnc2ctMDg3MTEzMThlYTVmZWI0MmYnO1xuXG5leHBvcnQgY29uc3QgcmRzUG9ydCA9IDU0MzI7XG4iXX0=

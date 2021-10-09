@@ -5,29 +5,13 @@ import * as EC2 from '@aws-cdk/aws-ec2';
 import * as IAM from '@aws-cdk/aws-iam';
 import * as ElasticCache from '@aws-cdk/aws-elasticache';
 import * as Lambda from '@aws-cdk/aws-lambda';
-import * as AppSync from '@aws-cdk/aws-appsync';
+import * as DDB from '@aws-cdk/aws-dynamodb';
 import * as AwsEvents from '@aws-cdk/aws-events';
 import * as AwsEventsTargets from '@aws-cdk/aws-events-targets';
-import * as Cognito from '@aws-cdk/aws-cognito';
 import * as ApiGateway from '@aws-cdk/aws-apigateway';
 import * as ApiGatewayV2 from '@aws-cdk/aws-apigatewayv2';
 import * as RDS from '@aws-cdk/aws-rds';
 import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations';
-
-import { PresenceSchema } from "./schema";
-import {
-    pagenowVpcId, rdsProxySgId, cognitoPoolId, rdsDBName, rdsDBHost,
-    rdsDBUser, rdsDBPassword, rdsDBPort, rdsProxyArn, rdsProxyName,
-    privateSubnet1Id, privateSubnet2Id,
-    privateRouteTableId, subnet1AZ, subnet2AZ
-} from '../stack-consts';
-
-// Interface used as parameter to create resolvers for API
-interface ResolverOptions {
-    source: string | AppSync.BaseDataSource,
-    requestMappingTemplate?: AppSync.MappingTemplate,
-    responseMappingTemplate?: AppSync.MappingTemplate
-};
 
 /**
  * class PresenceStack
@@ -41,10 +25,11 @@ export class PresenceApiStack extends CDK.Stack {
     private privateSubnet2: EC2.Subnet;
     private lambdaSG: EC2.SecurityGroup;
     private lambdaLayer: Lambda.LayerVersion;
-    private redisCluster: ElasticCache.CfnReplicationGroup;
+    private redisEndpointAddress: string;
+    private redisEndpointPort: string;
     private redisPort: number = 6379;
     private rdsProxy: RDS.DatabaseProxy;
-    readonly api: AppSync.GraphqlApi;
+    private userActivityHistoryTable: DDB.Table;
 
     // Lambda functions are stored by name
     private functions: { [key: string]: Lambda.Function } = {};
@@ -60,7 +45,7 @@ export class PresenceApiStack extends CDK.Stack {
      */
     private addFunction = (
         name: string, useRedis: boolean = true, usePostgres: boolean = true,
-        isTestFunction: boolean = false
+        isTestFunction: boolean = false, useDynamoDb: boolean = false
     ): void => {
         const fn = new Lambda.Function(this, name, {
             vpc: this.vpc,
@@ -73,18 +58,19 @@ export class PresenceApiStack extends CDK.Stack {
         });
         fn.addLayers(this.lambdaLayer);
         if (useRedis) {
-            fn.addEnvironment("REDIS_HOST",
-                this.redisCluster.attrPrimaryEndPointAddress);
-            fn.addEnvironment("REDIS_PORT",
-                this.redisCluster.attrPrimaryEndPointPort);
+            fn.addEnvironment("REDIS_HOST", this.redisEndpointAddress);
+            fn.addEnvironment("REDIS_PORT", this.redisEndpointPort);
         }
         if (usePostgres) {
-            fn.addEnvironment("DB_USER", rdsDBUser!);
-            fn.addEnvironment("DB_HOST", rdsDBHost!);
-            fn.addEnvironment("DB_DATABASE", rdsDBName);
-            fn.addEnvironment("DB_PASSWORD", rdsDBPassword!);
-            fn.addEnvironment("DB_PORT", rdsDBPort.toString());
-            this.rdsProxy.grantConnect(fn, rdsDBUser);
+            fn.addEnvironment("DB_USER", process.env.RDS_USERNAME!);
+            fn.addEnvironment("DB_HOST", process.env.RDS_HOST!);
+            fn.addEnvironment("DB_DATABASE", process.env.RDS_DB_NAME!);
+            fn.addEnvironment("DB_PASSWORD", process.env.RDS_PASSWORD!);
+            fn.addEnvironment("DB_PORT", process.env.RDS_PORT!);
+            this.rdsProxy.grantConnect(fn, process.env.RDS_USERNAME!);
+        }
+        if (useDynamoDb) {
+            fn.addEnvironment("USER_ACTIVITY_HISTORY_TABLE_NAME", this.userActivityHistoryTable.tableName);
         }
         this.functions[name] = fn;
     };
@@ -110,88 +96,90 @@ export class PresenceApiStack extends CDK.Stack {
 
         this.vpc = EC2.Vpc.fromLookup(this, 'PresenceVPC', {
             isDefault: false,
-            vpcId: pagenowVpcId
+            vpcId: process.env.VPC_ID!
         }) as EC2.Vpc;
 
         this.privateSubnet1 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet1', {
-            subnetId: privateSubnet1Id!,
-            routeTableId: privateRouteTableId,
-            availabilityZone: subnet1AZ
+            subnetId: process.env.PRIVATE_SUBNET1_ID!,
+            routeTableId: process.env.PRIVATE_ROUTE_TABLE_ID!,
+            availabilityZone: process.env.SUBNET1_AZ!
         }) as EC2.Subnet;
         this.privateSubnet2 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet2', {
-            subnetId: privateSubnet2Id!,
-            routeTableId: privateRouteTableId,
-            availabilityZone: subnet2AZ
+            subnetId: process.env.PRIVATE_SUBNET2_ID!,
+            routeTableId: process.env.PRIVATE_ROUTE_TABLE_ID!,
+            availabilityZone: process.env.SUBNET2_AZ!
         }) as EC2.Subnet;
-
-        const redisSubnet1 = new EC2.Subnet(this, 'redisSubnet1', {
-            availabilityZone: 'us-west-2a',
-            cidrBlock: '10.0.5.0/24',
-            vpcId: pagenowVpcId!,
-            mapPublicIpOnLaunch: false
-        });
-        const redisSubnet2 = new EC2.Subnet(this, 'redisSubnet2', {
-            availabilityZone: 'us-west-2b',
-            cidrBlock: '10.0.6.0/24',
-            vpcId: pagenowVpcId!,
-            mapPublicIpOnLaunch: false
-        });
 
         /**
          * Security Groups
          */
-        const rdsProxySG = EC2.SecurityGroup.fromLookup(this, "rdsProxySG", rdsProxySgId!);
-        const redisSG = new EC2.SecurityGroup(this, "redisSg", {
-            vpc: this.vpc,
-            description: "Security group for Redis Cluster"
-        });
-        this.lambdaSG = new EC2.SecurityGroup(this, "lambdaSg", {
-            vpc: this.vpc,
-            description: "Security group for Lambda functions"
-        });
+         if (process.env.LAMBDA_SG_ID === 'none') {
+            this.lambdaSG = new EC2.SecurityGroup(this, "lambdaSg", {
+                vpc: this.vpc,
+                description: "Security group for Lambda functions"
+            });
+        } else {
+            this.lambdaSG = EC2.SecurityGroup.fromLookup(
+                this, "lambdaSG", process.env.LAMBDA_SG_ID!) as EC2.SecurityGroup;
+        }
+        
+        if (process.env.REDIS_SG_ID !== 'none' && process.env.REDIS_ENDPOINT_ADDRESS !== 'none' && process.env.REDIS_ENDPOINT_PORT !== 'none') {
+            this.redisEndpointAddress = process.env.REDIS_ENDPOINT_ADDRESS!;
+            this.redisEndpointPort = process.env.REDIS_ENDPOINT_PORT!;
+        } else {
+            const redisSubnet1 = new EC2.Subnet(this, 'redisSubnet1', {
+                availabilityZone: 'us-west-2a',
+                cidrBlock: '10.0.5.0/24',
+                vpcId: process.env.VPC_ID!,
+                mapPublicIpOnLaunch: false
+            });
+            const redisSubnet2 = new EC2.Subnet(this, 'redisSubnet2', {
+                availabilityZone: 'us-west-2b',
+                cidrBlock: '10.0.6.0/24',
+                vpcId: process.env.VPC_ID!,
+                mapPublicIpOnLaunch: false
+            });
+            const redisSG = new EC2.SecurityGroup(this, "redisSg", {
+                vpc: this.vpc,
+                description: "Security group for Redis Cluster"
+            });
+            redisSG.addIngressRule(
+                this.lambdaSG,
+                EC2.Port.tcp(this.redisPort)
+            );
 
-        redisSG.addIngressRule(
-            this.lambdaSG,
-            EC2.Port.tcp(this.redisPort)
-        );
+            const redisSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisSubnets", {
+                cacheSubnetGroupName: "RedisSubnets",
+                description: "Subnet Group for Redis Cluster",
+                subnetIds: [ redisSubnet1.subnetId, redisSubnet2.subnetId ]
+            });
+            const redisCluster = new ElasticCache.CfnReplicationGroup(this, "PagenowCluster", {
+                replicationGroupDescription: "PagenowReplicationGroup",
+                cacheNodeType: "cache.t3.small",
+                engine: "redis",
+                numCacheClusters: 2,
+                automaticFailoverEnabled: true,
+                multiAzEnabled: true,
+                cacheSubnetGroupName: redisSubnets.ref,
+                securityGroupIds: [ redisSG.securityGroupId ],
+                port: this.redisPort
+            });
+
+            this.redisEndpointAddress = redisCluster.attrPrimaryEndPointAddress;
+            this.redisEndpointPort = redisCluster.attrPrimaryEndPointPort;
+        }
+
+        const rdsProxySG = EC2.SecurityGroup.fromLookup(this, "rdsProxySG", process.env.RDS_PROXY_SG_ID!);
         rdsProxySG.addIngressRule(
             this.lambdaSG,
-            EC2.Port.tcp(rdsDBPort)
+            EC2.Port.tcp(parseInt(process.env.RDS_PORT!, 10))
         );
-
-        /**
-         * Retrieve RDS Proxy
-         */
         this.rdsProxy = RDS.DatabaseProxy.fromDatabaseProxyAttributes(this, "RDSProxy", {
-            dbProxyArn: rdsProxyArn!,
-            dbProxyName: rdsProxyName!,
-            endpoint: rdsDBHost!,
+            dbProxyArn: process.env.RDS_PROXY_ARN!,
+            dbProxyName: process.env.RDS_PROXY_NAME!,
+            endpoint: process.env.RDS_HOST!!,
             securityGroups: [rdsProxySG]
-        }) as RDS.DatabaseProxy;
-
-        /**
-         * Redis cache cluster
-         * 
-         * Note those are level 1 constructs in CDK.
-         * So props like `cacheSubnetGroupName` have misleading names and require a name 
-         * in CloudFormation sense, which is actually a "ref" for reference.
-         */
-        const redisSubnets = new ElasticCache.CfnSubnetGroup(this, "RedisSubnets", {
-            cacheSubnetGroupName: "RedisSubnets",
-            description: "Subnet Group for Redis Cluster",
-            subnetIds: [ redisSubnet1.subnetId, redisSubnet2.subnetId ]
-        });
-        this.redisCluster = new ElasticCache.CfnReplicationGroup(this, "PagenowCluster", {
-            replicationGroupDescription: "PagenowReplicationGroup",
-            cacheNodeType: "cache.t3.small",
-            engine: "redis",
-            numCacheClusters: 2,
-            automaticFailoverEnabled: true,
-            multiAzEnabled: true,
-            cacheSubnetGroupName: redisSubnets.ref,
-            securityGroupIds: [ redisSG.securityGroupId ],
-            port: this.redisPort
-        });
+        }) as RDS.DatabaseProxy;        
 
         /**
          * Lambda functions creation
@@ -212,6 +200,9 @@ export class PresenceApiStack extends CDK.Stack {
             (fn) => { this.addFunction(fn) }
         );
 
+        // Add Lambda functions with DynamoDB table
+        [ 'update_presence' ].forEach((fn) => { this.addFunction(fn, true, true, false, true) });
+
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
             'add_users', 'add_friendship', 'test_connect', 'test_update_presence',
@@ -219,6 +210,22 @@ export class PresenceApiStack extends CDK.Stack {
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
+
+        /**
+         * DynamoDB Table
+         */
+        this.userActivityHistoryTable = new DDB.Table(this, 'UserActivityHistoryTable', {
+            billingMode: DDB.BillingMode.PAY_PER_REQUEST,
+            partitionKey: {
+                name: 'user_id',
+                type: DDB.AttributeType.STRING
+            },
+            sortKey: {
+                name: 'timestamp',
+                type: DDB.AttributeType.STRING
+            }
+        });
+        this.userActivityHistoryTable.grantWriteData(this.getFn('update_presence'));
 
         /**
          * Event bus

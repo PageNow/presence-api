@@ -146,6 +146,18 @@ exports.handler = async function(event) {
     } catch (error) {
         return { statusCode: 500, body: error.stack };
     }
+
+    // save presence update to UserActivityHistoryTable
+    const dynamoDb = new AWS.DynamoDB();
+    await dynamoDb.putItem({
+        TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
+        Item: {
+            user_id: userId,
+            timestamp: new Date(Date.now()).toISOString(),
+            url: url,
+            title: title
+        }
+    })
     
     return { statusCode: 200, body: 'Data sent' };
 };
