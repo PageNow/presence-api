@@ -4,6 +4,7 @@ const { promisify } = require('util');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 const { Client } = require('pg');
 const psl = require('psl');
+AWS.config.update({ region: process.env.AWS_REGION });
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
@@ -12,6 +13,7 @@ const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
 let cacheKeys;
+const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
@@ -42,12 +44,14 @@ exports.handler = async function(event) {
     const url = eventData.url;
     const title = eventData.title;
     let domain = '';
-    try {
-        const urlObj = new URL(url);
-        const parsed = psl.parse(urlObj.hostname);
-        domain = parsed.domain;
-    } catch (error) {
-        console.log(error);
+    if (url !== '') {
+        try {
+            const urlObj = new URL(url);
+            const parsed = psl.parse(urlObj.hostname);
+            domain = parsed.domain;
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     // Update status and page on redis
@@ -148,16 +152,20 @@ exports.handler = async function(event) {
     }
 
     // save presence update to UserActivityHistoryTable
-    const dynamoDb = new AWS.DynamoDB();
-    await dynamoDb.putItem({
-        TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
-        Item: {
-            user_id: userId,
-            timestamp: new Date(Date.now()).toISOString(),
-            url: url,
-            title: title
-        }
-    })
+    try {
+        const result = await dynamoDB.putItem({
+            TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
+            Item: {
+                user_id: { S: userId },
+                timestamp: { S: new Date(Date.now()).toISOString() },
+                url: { S: url },
+                title: { S: title }
+            }
+        }).promise();
+        console.log(result);
+    } catch(err) {
+        console.log(err);
+    }
     
     return { statusCode: 200, body: 'Data sent' };
 };

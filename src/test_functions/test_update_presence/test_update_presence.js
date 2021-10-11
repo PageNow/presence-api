@@ -3,6 +3,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const psl = require('psl');
+AWS.config.update({ region: process.env.AWS_REGION });
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
@@ -10,6 +11,8 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 const hset = promisify(redisPresence.hset).bind(redisPresence);
+
+const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 exports.handler = async function(event) {
     const userId = event && event.userId;
@@ -126,5 +129,20 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: error.stack };
     }
     
+    try {
+        const result = await dynamoDB.putItem({
+            TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
+            Item: {
+                user_id: { S: userId },
+                timestamp: { S: new Date(Date.now()).toISOString() },
+                url: { S: url },
+                title: { S: title }
+            }
+        }).promise();
+        console.log(result);
+    } catch(err) {
+        console.log(err);
+    }
+
     return { statusCode: 200, body: 'Data sent' };
 };

@@ -13,6 +13,8 @@ import * as ApiGatewayV2 from '@aws-cdk/aws-apigatewayv2';
 import * as RDS from '@aws-cdk/aws-rds';
 import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations';
 
+require('dotenv').config();
+
 /**
  * class PresenceStack
  * 
@@ -70,7 +72,9 @@ export class PresenceApiStack extends CDK.Stack {
             this.rdsProxy.grantConnect(fn, process.env.RDS_USERNAME!);
         }
         if (useDynamoDb) {
+            fn.addEnvironment("AWS_REGION", process.env.AWWS_REGION!);
             fn.addEnvironment("USER_ACTIVITY_HISTORY_TABLE_NAME", this.userActivityHistoryTable.tableName);
+            this.userActivityHistoryTable.grantWriteData(fn);
         }
         this.functions[name] = fn;
     };
@@ -179,7 +183,22 @@ export class PresenceApiStack extends CDK.Stack {
             dbProxyName: process.env.RDS_PROXY_NAME!,
             endpoint: process.env.RDS_HOST!!,
             securityGroups: [rdsProxySG]
-        }) as RDS.DatabaseProxy;        
+        }) as RDS.DatabaseProxy;
+        
+        /**
+         * DynamoDB Table
+         */
+         this.userActivityHistoryTable = new DDB.Table(this, 'UserActivityHistoryTable', {
+            billingMode: DDB.BillingMode.PAY_PER_REQUEST,
+            partitionKey: {
+                name: 'user_id',
+                type: DDB.AttributeType.STRING
+            },
+            sortKey: {
+                name: 'timestamp',
+                type: DDB.AttributeType.STRING
+            }
+        });
 
         /**
          * Lambda functions creation
@@ -195,37 +214,27 @@ export class PresenceApiStack extends CDK.Stack {
         // Add Lambda functions
         [ 
             'heartbeat', 'timeout', 'connect', 'disconnect', 'close_connection',
-            'get_presence', 'get_user_presence', 'update_presence'
+            'get_presence', 'get_user_presence'
         ].forEach(
             (fn) => { this.addFunction(fn) }
         );
 
         // Add Lambda functions with DynamoDB table
-        [ 'update_presence' ].forEach((fn) => { this.addFunction(fn, true, true, false, true) });
+        [ 'update_presence' ].forEach((fn) => {
+            this.addFunction(fn, true, true, false, true)
+        });
 
         // Add Lambda test functions (for filling in initial data and testing)
         [ 
-            'add_users', 'add_friendship', 'test_connect', 'test_update_presence',
+            'add_users', 'add_friendship', 'test_connect',
             'read_presence', 'read_user_info', 'test_sql'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
 
-        /**
-         * DynamoDB Table
-         */
-        this.userActivityHistoryTable = new DDB.Table(this, 'UserActivityHistoryTable', {
-            billingMode: DDB.BillingMode.PAY_PER_REQUEST,
-            partitionKey: {
-                name: 'user_id',
-                type: DDB.AttributeType.STRING
-            },
-            sortKey: {
-                name: 'timestamp',
-                type: DDB.AttributeType.STRING
-            }
-        });
-        this.userActivityHistoryTable.grantWriteData(this.getFn('update_presence'));
+        [ 'test_update_presence' ].forEach((fn) => {
+            this.addFunction(fn, true, true, true, true);
+        })
 
         /**
          * Event bus
