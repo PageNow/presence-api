@@ -72,7 +72,6 @@ export class PresenceApiStack extends CDK.Stack {
             this.rdsProxy.grantConnect(fn, process.env.RDS_USERNAME!);
         }
         if (useDynamoDb) {
-            fn.addEnvironment("AWS_REGION", process.env.AWWS_REGION!);
             fn.addEnvironment("USER_ACTIVITY_HISTORY_TABLE_NAME", this.userActivityHistoryTable.tableName);
             this.userActivityHistoryTable.grantWriteData(fn);
         }
@@ -243,7 +242,7 @@ export class PresenceApiStack extends CDK.Stack {
         const presenceEventBus = new AwsEvents.EventBus(this, "PresenceEventBus");
         // Rule to trigger lambda timeout every minute
         new AwsEvents.Rule(this, "PresenceTimeoutRule", {
-            schedule: AwsEvents.Schedule.cron({ hour: "*" }),
+            schedule: AwsEvents.Schedule.rate(CDK.Duration.minutes(3)),
             targets: [ new AwsEventsTargets.LambdaFunction(this.getFn("timeout")) ],
             enabled: true
         });
@@ -254,18 +253,9 @@ export class PresenceApiStack extends CDK.Stack {
          * - Add IAM policy statement for event bus access (putEvents)
          * - Add timeout
          */
-        const allowEventBridge = new IAM.PolicyStatement({ effect: IAM.Effect.ALLOW });
-        allowEventBridge.addActions("events:PutEvents");
-        allowEventBridge.addResources(presenceEventBus.eventBusArn);
-
-        this.getFn("timeout")
-            .addEnvironment("TIMEOUT", "10000")
-            .addEnvironment("EVENT_BUS", presenceEventBus.eventBusName)
-            .addToRolePolicy(allowEventBridge);
-
-        // this.getFn("disconnect")
-        //     .addEnvironment("EVENT_BUS", presenceEventBus.eventBusName)
-        //     .addToRolePolicy(allowEventBridge);
+        // const allowEventBridge = new IAM.PolicyStatement({ effect: IAM.Effect.ALLOW });
+        // allowEventBridge.addActions("events:PutEvents");
+        // allowEventBridge.addResources(presenceEventBus.eventBusArn);
 
         /**
          * API Gateway for real-time presence websocket
@@ -304,7 +294,7 @@ export class PresenceApiStack extends CDK.Stack {
             resource: webSocketApi.apiId,
         });
 
-        [ 'update_presence', 'test_update_presence' ].forEach(fn => {
+        [ 'update_presence', 'test_update_presence', 'timeout' ].forEach(fn => {
             this.getFn(fn).addToRolePolicy(
                 new IAM.PolicyStatement({
                     actions: ['execute-api:ManageConnections'],
@@ -313,13 +303,11 @@ export class PresenceApiStack extends CDK.Stack {
             );
         });
 
-        /**
-         * Retrieve existing user pool
-         */
-        // const userPool = Cognito.UserPool.fromUserPoolId(this, 'pagenow-userpool', cognitoPoolId!);
-        // const apiAuthorizer = new ApiGateway.CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
-        //     cognitoUserPools: [ userPool ]
-        // });
+        this.getFn("timeout")
+            .addEnvironment("TIMEOUT", "180000")
+            .addEnvironment("WSS_DOMAIN_NAME", webSocketApi.apiEndpoint)
+            .addEnvironment("WSS_STAGE", apiStage.stageName);
+            // .addToRolePolicy(allowEventBridge);
 
         /**
          * API Gateway for Presence REST endpoint

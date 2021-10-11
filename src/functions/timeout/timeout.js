@@ -1,14 +1,13 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
-
-const timeout = parseInt(process.env.TIMEOUT, 10);
-const eventBus = process.env.EVENT_BUS;
+const { Client } = require('pg');
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'locahost';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
-const eventBridge = new AWS.EventBridge();
+const hmget = promisify(redisPresence.hmget).bind(redisPresence);
+const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
 /**
  * Timeout handler
@@ -18,46 +17,106 @@ const eventBridge = new AWS.EventBridge();
  * 3. Send events for ids
  */
 exports.handler = async function() {
-    const timestamp = Date.now() - timeout;
+    // Get list of friends
+    const client = new Client({
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        database: process.env.DB_DATABASE,
+        password: process.env.DB_PASSWORD,
+        port: parseInt(process.env.DB_PORT, 10) || 5432,
+        ssl: true
+    });
+    try {
+        await client.connect();
+    } catch (err) {
+        console.log(err);
+        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
+    }
+    
+    const timestamp = Date.now() - parseInt(process.env.TIMEOUT, 10);
     const commands = redisPresence.multi();
     commands.zrangebyscore("status", "-inf", timestamp);
     commands.zremrangebyscore("status", "-inf", timestamp);
     const execute = promisify(commands.exec).bind(commands);
+    
+    let userIdArr;
     try {
         // Multiple commands results are returned as an array of result, one entry per command
         // `userIds` is the result of the first command
-        const [userIds] = await execute();
-        if (userIds.length === 0) return { expired: 0 };
-
-        // putEvents is limited to 10 events per call
-        // Create a promise for each batch of ten events ...
-        let promises = [];
-        while (userIds.length) {
-            const Entries = userIds.splice(0, 10).map(userId => {
-                return {
-                    Detail: JSON.stringify({ userId }),
-                    DetailType: "presence.disconnected",
-                    Source: "api.presence",
-                    EventBusName: eventBus,
-                    Time: Date.now()
-                };
-            });
-            promises.push(eventBridge.putEvents({ Entries }).promise());
+        [userIdArr] = await execute();
+        console.log('userIdArr', userIdArr);
+        // remove page of userIds
+        if (userIdArr.length > 0) {
+            await hdel("page", userIdArr);
         }
-        // ... and await for all promises to return
-        const results = await Promise.all(promises);
-        // Sum results for all promises and return
-        const failed = results.reduce(
-            (sum, result) => sum + result.FailedEntryCount,
-            0
-        );
-        const expired = results.reduce(
-            (sum, result) => sum + (result.Entries.length - result.FailedEntryCount),
-            0
-        );
-        return { expired, failed };
     } catch (error) {
         console.log(error);
-        return error;
+        userIdArr = [];
     }
-}
+    
+    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+        apiVersion: '2018-11-29',
+        endpoint: process.env.WSS_DOMAIN_NAME.replace('wss://', '') + '/' + process.env.WSS_STAGE
+    });
+
+    for (const userId of userIdArr) {
+        let friendIdArr = [];
+        try {
+            const text = `
+                SELECT * FROM friendship_table
+                WHERE (user_id1 = $1 OR user_id2 = $1) AND
+                    accepted_at IS NOT NULL
+            `;
+            const values = [userId];
+            let result = await client.query(text, values);
+            console.log(result.rows);
+            friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
+        } catch (error) {
+            await client.end();
+            console.log(error);
+            return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        }
+        
+        let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
+        try {
+            let connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+            connectionDataArr = connectionIdArr.map((x, i) => {
+                return { friendId: friendIdArr[i], connectionId: x };
+            }).filter(x => x.connectionId);
+        } catch (error) {
+            console.log(error);
+            return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        }
+        
+        const postCalls = connectionDataArr.map(async ({ friendId, connectionId }) => {
+            console.log('postCall connectionId', connectionId);
+            try {
+                await apigwManagementApi.postToConnection({
+                    ConnectionId: connectionId,
+                    Data: JSON.stringify({
+                        type: 'presence-timeout',
+                        userId: userId
+                    })
+                }).promise();
+            } catch (error) {
+                console.log(error);
+                if (error.statusCode === 410) {
+                    console.log(`Found stale connection, deleting ${connectionId}`);
+                    await hdel("presence_user_connection", friendId).promise();
+                    await hdel("presence_connection_user", connectionId).promise();
+                } else {
+                    throw error;
+                }
+            }
+        });
+        
+        try {
+            await Promise.all(postCalls);
+        } catch (error) {
+            return { statusCode: 500, body: error.stack };
+        }
+    }
+    await client.end();
+    
+    return { statusCode: 200, body: 'Data sent' };
+};

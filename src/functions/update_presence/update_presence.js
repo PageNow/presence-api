@@ -4,7 +4,6 @@ const { promisify } = require('util');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 const { Client } = require('pg');
 const psl = require('psl');
-AWS.config.update({ region: process.env.AWS_REGION });
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;

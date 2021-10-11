@@ -3,14 +3,12 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const psl = require('psl');
-AWS.config.update({ region: process.env.AWS_REGION });
 
 const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
-const hset = promisify(redisPresence.hset).bind(redisPresence);
 
 const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
@@ -81,7 +79,11 @@ exports.handler = async function(event) {
     friendIdArr.push(userId);
 
     try {
-        hset('page', userId, JSON.stringify({url: url, title: title}));
+        const commands = redisPresence.multi();
+        commands.zadd('status', Date.now(), userId);
+        commands.hset('page', userId, JSON.stringify({url: url, title: title}));
+        const execute = promisify(commands.exec).bind(commands);
+        await execute();
     } catch (error) {
         console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
