@@ -74,7 +74,7 @@ exports.handler = async function(event) {
         friendIdArr.push(userId);
 
         text = `
-            SELECT user_id, first_name, middle_name, last_name, profile_image_extension
+            SELECT user_id, first_name, last_name, profile_image_extension
             FROM user_table
             WHERE user_id = ANY ($1)
         `;

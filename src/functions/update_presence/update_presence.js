@@ -102,13 +102,15 @@ exports.handler = async function(event) {
     // get connectionId of all friends
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
-        const connectionIdArr = await hmget("presence_user_connection", friendIdArr);
-        connectionDataArr = connectionIdArr.map((x, i) => {
-            return { friendId: friendIdArr[i], connectionId: x };
-        }).filter(x => x.connectionId);
+        if (friendIdArr.length > 0) {
+            const connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+            connectionDataArr = connectionIdArr.map((x, i) => {
+                return { friendId: friendIdArr[i], connectionId: x };
+            }).filter(x => x.connectionId);
+        }
     } catch (error) {
         console.log(error);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
     connectionDataArr.push({ friendId: userId, connectionId: event.requestContext.connectionId });
     console.log('connectionDataArr', connectionDataArr);

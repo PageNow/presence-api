@@ -37,7 +37,7 @@ exports.handler = async function(event) {
         let friendIdArr = result.rows.map(x => x.user_id);
         console.log(friendIdArr);
         text = `
-            SELECT user_id, first_name, middle_name, last_name
+            SELECT user_id, first_name, last_name
             FROM user_table
             WHERE user_id = ANY ($1)
         `;

@@ -97,7 +97,7 @@ exports.handler = async function(event) {
         }).filter(x => x.connectionId);
     } catch (error) {
         console.log(error);
-        return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
+        return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
 
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
