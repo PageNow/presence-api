@@ -66,7 +66,13 @@ module.exports = {
         'news.mit.edu',
         'sciencedaily.com',
         'research.google',
-        'kdnuggets.com'
+        'kdnuggets.com',
+        'serverless.com',
+        'namu.wiki',
+        'github.io',
+        'angular.io',
+        'mozilla.org',
+        'w3schools.com'
     ],
     DEFAULT_DOMAIN_DENY_ARRAY: [
         'facebook.com',
