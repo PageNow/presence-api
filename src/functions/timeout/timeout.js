@@ -3,8 +3,8 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 
-const redisPresenceEndpoint = process.env.REDIS_HOST || 'locahost';
-const redisPresencePort = process.env.REDIS_PORT || 6379;
+const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'locahost';
+const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);

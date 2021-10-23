@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken');
 
 const redis = require('redis');
 const eventBus = process.env.EVENT_BUS;
-const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
-const redisPresencePort = process.env.REDIS_PORT || 6379;
+const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'host.docker.internal';
+const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const zrem = promisify(redisPresence.zrem).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);

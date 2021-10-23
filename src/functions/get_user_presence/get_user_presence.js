@@ -3,8 +3,8 @@ const { promisify } = require('util');
 const { Client } = require('pg');
 const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 
-const redisPresenceEndpoint = process.env.REDIS_HOST || 'host.docker.internal';
-const redisPresencePort = process.env.REDIS_PORT || 6379;
+const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
+const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hget = promisify(redisPresence.hget).bind(redisPresence);
 

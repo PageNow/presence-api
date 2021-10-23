@@ -27,8 +27,10 @@ export class PresenceApiStack extends CDK.Stack {
     private privateSubnet2: EC2.Subnet;
     private lambdaSG: EC2.SecurityGroup;
     private lambdaLayer: Lambda.LayerVersion;
-    private redisEndpointAddress: string;
-    private redisEndpointPort: string;
+    private redisPrimaryEndpointAddress: string;
+    private redisPrimaryEndpointPort: string;
+    private redisReaderEndpointAddress: string;
+    private redisReaderEndpointPort: string;
     private redisPort: number = 6379;
     private rdsProxy: RDS.DatabaseProxy;
     private userActivityHistoryTable: DDB.Table;
@@ -60,8 +62,10 @@ export class PresenceApiStack extends CDK.Stack {
         });
         fn.addLayers(this.lambdaLayer);
         if (useRedis) {
-            fn.addEnvironment("REDIS_HOST", this.redisEndpointAddress);
-            fn.addEnvironment("REDIS_PORT", this.redisEndpointPort);
+            fn.addEnvironment("REDIS_PRIMARY_HOST", this.redisPrimaryEndpointAddress);
+            fn.addEnvironment("REDIS_PRIMARY_PORT", this.redisPrimaryEndpointPort);
+            fn.addEnvironment("REDIS_READER_HOST", this.redisReaderEndpointAddress);
+            fn.addEnvironment("REDIS_READER_PORT", this.redisReaderEndpointPort);
         }
         if (usePostgres) {
             fn.addEnvironment("DB_USER", process.env.RDS_USERNAME!);
@@ -126,9 +130,12 @@ export class PresenceApiStack extends CDK.Stack {
                 this, "lambdaSG", process.env.LAMBDA_SG_ID!) as EC2.SecurityGroup;
         }
         
-        if (process.env.REDIS_SG_ID !== 'none' && process.env.REDIS_ENDPOINT_ADDRESS !== 'none' && process.env.REDIS_ENDPOINT_PORT !== 'none') {
-            this.redisEndpointAddress = process.env.REDIS_ENDPOINT_ADDRESS!;
-            this.redisEndpointPort = process.env.REDIS_ENDPOINT_PORT!;
+        if (process.env.REDIS_SG_ID !== 'none' && process.env.REDIS_PRIMARY_ENDPOINT_ADDRESS !== 'none'
+                && process.env.REDIS_PRIMARY_ENDPOINT_PORT !== 'none') {
+            this.redisPrimaryEndpointAddress = process.env.REDIS_PRIMARY_ENDPOINT_ADDRESS!;
+            this.redisPrimaryEndpointPort = process.env.REDIS_PRIMARY_ENDPOINT_PORT!;
+            this.redisReaderEndpointAddress = process.env.REDIS_READER_ENDPOINT_ADDRESS!;
+            this.redisReaderEndpointPort = process.env.REDIS_READER_ENDPOINT_PORT!;
         } else {
             const redisSubnet1 = new EC2.Subnet(this, 'redisSubnet1', {
                 availabilityZone: 'us-west-2a',
@@ -168,8 +175,10 @@ export class PresenceApiStack extends CDK.Stack {
                 port: this.redisPort
             });
 
-            this.redisEndpointAddress = redisCluster.attrPrimaryEndPointAddress;
-            this.redisEndpointPort = redisCluster.attrPrimaryEndPointPort;
+            this.redisPrimaryEndpointAddress = redisCluster.attrPrimaryEndPointAddress;
+            this.redisPrimaryEndpointPort = redisCluster.attrPrimaryEndPointPort;
+            this.redisReaderEndpointAddress = redisCluster.attrReaderEndPointAddress;
+            this.redisReaderEndpointPort = redisCluster.attrReaderEndPointPort;
         }
 
         const rdsProxySG = EC2.SecurityGroup.fromLookup(this, "rdsProxySG", process.env.RDS_PROXY_SG_ID!);
