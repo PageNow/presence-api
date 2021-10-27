@@ -236,7 +236,7 @@ export class PresenceApiStack extends CDK.Stack {
         [ 
             'add_users', 'add_friendship', 'test_connect',
             'read_presence', 'read_user_info', 'test_sql',
-            'test_timeout'
+            'test_timeout', 'update_profile_image_info'
         ].forEach(
             (fn) => { this.addFunction(fn, true, true, true) }
         );
