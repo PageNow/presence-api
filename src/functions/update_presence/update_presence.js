@@ -1,7 +1,6 @@
 const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
-const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
 const { Client } = require('pg');
 const psl = require('psl');
 
@@ -10,36 +9,26 @@ const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
+const hget = promisify(redisPresence.hget).bind(redisPresence);
 
-let cacheKeys;
 const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
     console.log('eventData', eventData);
-    if (eventData.jwt == undefined || eventData.jwt == null) {
-        throw new Error("Missing 'jwt' in the event body");
-    }
     if (eventData.url == undefined || eventData.url == null) {
         throw new Error("Missing 'url' in the event body");
     }
     if (eventData.title == undefined || eventData.title == null) {
         throw new Error("Missing 'title' in the event body");
     }
-
-    let userId;
-    try {
-        if (!cacheKeys) {
-            cacheKeys = await getPublicKeys();
-        }
-        const decodedJwt = await decodeVerifyJwt(eventData.jwt, cacheKeys);
-        if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-            return { statusCode: 500, body: 'Authentication error' };
-        }
-        userId = decodedJwt.username;
-    } catch (error) {
-        return { statusCode: 500, body: 'JWT decode error: ' + JSON.stringify(error) };
+    
+    const userId = await hget("presence_connection_user", event.requestContext.connectionId);
+    if (userId == null || userId == undefined) {
+        return { statusCode: 500, body: 'Authentication error' };
     }
+    console.log('connection userId', userId);
+    
     const url = eventData.url;
     const title = eventData.title;
     let domain = '';

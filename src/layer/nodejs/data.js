@@ -16,7 +16,7 @@ module.exports = {
         dob: "1996-09-11",
     },
     user3: {
-        user_id: "google_117429865182265482928",
+        user_id: "google_337456865285275482928",
         email: "zzisu@gmail.com",
         first_name: "Jisoo",
         last_name: "Lee",

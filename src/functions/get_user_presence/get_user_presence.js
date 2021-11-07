@@ -1,20 +1,19 @@
 const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
-const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
+const jwt = require('jsonwebtoken');
 
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hget = promisify(redisPresence.hget).bind(redisPresence);
 
-let cacheKeys;
 const responseHeader = {
     "Access-Control-Allow-Origin": "*",
 };
 
 exports.handler = async function(event) {
-    console.log(event);
+    console.log("event", event);
     if (event.pathParameters.userId == undefined || event.pathParameters.userId == null) {
         return {
             statusCode: 500,
@@ -24,24 +23,8 @@ exports.handler = async function(event) {
     }
     const targetUserId = event.pathParameters.userId;
 
-    let userId, decodedJwt;
-    try {
-        if (!cacheKeys) {
-            cacheKeys = await getPublicKeys();
-        }
-        decodedJwt = await decodeVerifyJwt(event.headers.Authorization, cacheKeys);
-        userId = decodedJwt.username;
-    } catch (error) {
-        console.log(error);
-        return {
-            statusCode: 500,
-            headers: responseHeader,
-            body: 'JWT decode error: ' + JSON.stringify(error)
-        };
-    }
-    if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-        return { statusCode: 500, headers: responseHeader, body: 'Authentication error' };
-    }
+    const jwtDecoded = jwt.decode(event.headers['Authorization']);
+    const userId = jwtDecoded['cognito:username'];
     console.log(userId);
 
     const client = new Client({

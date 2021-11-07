@@ -12,6 +12,7 @@ import * as ApiGateway from '@aws-cdk/aws-apigateway';
 import * as ApiGatewayV2 from '@aws-cdk/aws-apigatewayv2';
 import * as RDS from '@aws-cdk/aws-rds';
 import * as ApiGatewayIntegrations from '@aws-cdk/aws-apigatewayv2-integrations';
+import * as Cognito from '@aws-cdk/aws-cognito';
 
 require('dotenv').config();
 
@@ -221,7 +222,7 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda functions
         [ 
-            'heartbeat', 'timeout', 'connect', 'disconnect', 'close_connection',
+            'heartbeat', 'timeout', 'connect', 'close_connection',
             'get_presence', 'get_user_presence'
         ].forEach(
             (fn) => { this.addFunction(fn) }
@@ -292,15 +293,25 @@ export class PresenceApiStack extends CDK.Stack {
                 handler: this.getFn('update_presence')
             })
         });
-        const apiStage = new ApiGatewayV2.WebSocketStage(this, 'DevStage', {
+        const apiStageDev = new ApiGatewayV2.WebSocketStage(this, 'DevStage', {
             webSocketApi,
             stageName: 'dev',
             autoDeploy: true,
         });
+        const apiStageProd = new ApiGatewayV2.WebSocketStage(this, 'ProdStage', {
+            webSocketApi,
+            stageName: 'prod',
+            autoDeploy: false
+        });
 
-        const connectionsArns = this.formatArn({
+        const connectionsArnsDev = this.formatArn({
             service: 'execute-api',
-            resourceName: `${apiStage.stageName}/POST/*`,
+            resourceName: `${apiStageDev.stageName}/POST/*`,
+            resource: webSocketApi.apiId,
+        });
+        const connectionsArnsProd = this.formatArn({
+            service: 'execute-api',
+            resourceName: `${apiStageProd.stageName}/POST/*`,
             resource: webSocketApi.apiId,
         });
 
@@ -308,7 +319,7 @@ export class PresenceApiStack extends CDK.Stack {
             this.getFn(fn).addToRolePolicy(
                 new IAM.PolicyStatement({
                     actions: ['execute-api:ManageConnections'],
-                    resources: [connectionsArns]
+                    resources: [connectionsArnsDev, connectionsArnsProd]
                 })
             );
         });
@@ -316,8 +327,15 @@ export class PresenceApiStack extends CDK.Stack {
         this.getFn("timeout")
             .addEnvironment("TIMEOUT", "180000")
             .addEnvironment("WSS_DOMAIN_NAME", webSocketApi.apiEndpoint)
-            .addEnvironment("WSS_STAGE", apiStage.stageName);
+            .addEnvironment("WSS_STAGE", apiStageProd.stageName)
+            .addEnvironment("WSS_STAGE_DEV", apiStageDev.stageName);
             // .addToRolePolicy(allowEventBridge);
+
+        /**
+         * User Pool
+         */
+        const userPool = Cognito.UserPool.fromUserPoolId(this, 'PagenowUserpool',
+            process.env.COGNITO_POOL_ID!);
 
         /**
          * API Gateway for Presence REST endpoint
@@ -325,7 +343,7 @@ export class PresenceApiStack extends CDK.Stack {
         const restApi = new ApiGateway.RestApi(this, 'PresenceRestApi', {
             deploy: true,
             deployOptions: {
-                stageName: 'dev'
+                stageName: 'prod'
             },
             defaultCorsPreflightOptions: {
                 allowHeaders: [
@@ -336,24 +354,39 @@ export class PresenceApiStack extends CDK.Stack {
                 ],
                 allowMethods: ['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
                 allowCredentials: true,
-                allowOrigins: ['http://localhost:4200'],
-            },
-            // defaultMethodOptions: {
-            //     authorizationType: ApiGateway.AuthorizationType.COGNITO,
-            //     authorizer: apiAuthorizer,
-            // }
+                allowOrigins: [
+                    'http://localhost:4200'
+                ].concat(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : [])
+            }
         });
+
+        // Authorizer
+        const authorizer = new ApiGateway.CfnAuthorizer(this, 'PresenceApiAuthorizer', {
+            restApiId: restApi.restApiId,
+            name: 'PresenceRestApiAuthorizer',
+            type: 'COGNITO_USER_POOLS',
+            identitySource: 'method.request.header.Authorization',
+            providerArns: [ userPool.userPoolArn ]
+        });
+        const authorizerMethodOption = {
+            authorizationType: ApiGateway.AuthorizationType.COGNITO,
+            authorizer: {
+                authorizerId: authorizer.ref
+            }
+        };
 
         const presenceRestResource = restApi.root.addResource('presence');
         presenceRestResource.addMethod(
             'GET',
-            new ApiGateway.LambdaIntegration(this.getFn('get_presence'), { proxy: true })
+            new ApiGateway.LambdaIntegration(this.getFn('get_presence'), { proxy: true }),
+            authorizerMethodOption
         );
 
         const userPresenceRestResource = presenceRestResource.addResource('{userId}');
         userPresenceRestResource.addMethod(
             'GET',
-            new ApiGateway.LambdaIntegration(this.getFn('get_user_presence'), { proxy: true })
+            new ApiGateway.LambdaIntegration(this.getFn('get_user_presence'), { proxy: true }),
+            authorizerMethodOption
         );
 
 

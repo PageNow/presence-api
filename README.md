@@ -88,6 +88,8 @@ Check the function identifier from template.yaml and run
 
 * https://github.com/awslabs/aws-support-tools/tree/master/Cognito/decode-verify-jwt
 
+### Testing
+
 ## Questions
 
 * Does AppSync verify JWT token? If not, we have to verify manually on Lambda functions... (assume they verify JWT token for now)

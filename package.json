@@ -51,5 +51,10 @@
     "dotenv": "^10.0.0",
     "path": "^0.12.7",
     "source-map-support": "^0.5.16"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^/opt/nodejs/decode-verify-jwt": "<rootDir>/src/layer/nodejs/decode-verify-jwt"
+    }
   }
 }

@@ -1,7 +1,7 @@
 const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
-const { getPublicKeys, decodeVerifyJwt } = require('/opt/nodejs/decode-verify-jwt');
+const jwt = require('jsonwebtoken');
 const psl = require('psl');
 
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
@@ -9,36 +9,13 @@ const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 
-let cacheKeys;
 const responseHeader = {
     "Access-Control-Allow-Origin": "*",
 };
 
 exports.handler = async function(event) {
-    let userId;
-    try {
-        if (!cacheKeys) {
-            cacheKeys = await getPublicKeys();
-        }
-        const decodedJwt = await decodeVerifyJwt(event.headers.Authorization, cacheKeys);
-        console.log(decodedJwt);
-        if (!decodedJwt || !decodedJwt.isValid || decodedJwt.username === '') {
-            console.log('Authorization error');
-            return {
-                statusCode: 500,
-                headers: responseHeader,
-                body: 'Authentication error'
-            };
-        }
-        userId = decodedJwt.username;
-    } catch (error) {
-        return {
-            statusCode: 500,
-            headers: responseHeader,
-            body: 'JWT decode error: ' + JSON.stringify(error)
-        };
-    }
-    console.log(userId);
+    const jwtDecoded = jwt.decode(event.headers['Authorization']);
+    const userId = jwtDecoded['cognito:username'];
 
     const client = new Client({
         user: process.env.DB_USER,
@@ -69,7 +46,7 @@ exports.handler = async function(event) {
         `;
         let values = [userId];
         let result = await client.query(text, values);
-        console.log(result.rows);
+        console.log('friend query result', result.rows);
         friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
         friendIdArr.push(userId);
 
@@ -80,7 +57,7 @@ exports.handler = async function(event) {
         `;
         result = await client.query(text, [friendIdArr]);
         result.rows.forEach(x => userInfoMap[x.user_id] = x);
-        console.log(userInfoMap);
+        console.log('userInfoMap', userInfoMap);
     } catch (error) {
         await client.end();
         console.log(error);
@@ -125,34 +102,29 @@ exports.handler = async function(event) {
                 userId: key,
                 page: page
             };
-            let domain;
-            try {
-                const urlObj = new URL(page.url);
-                const parsed = psl.parse(urlObj.hostname);
-                domain = parsed.domain;
-            } catch (error) {
-                console.log(error);
+            let domain = '';
+            if (page.url !== '') {
+                try {
+                    const urlObj = new URL(page.url);
+                    const parsed = psl.parse(urlObj.hostname);
+                    domain = parsed.domain;
+                } catch (error) {
+                    console.log(error);
+                }
             }
             presence[key].page['domain'] = domain;
         }
     });
-    console.log(presence);
+    console.log('presence', presence);
 
     const presenceArr = [];
     for (const friendId of friendIdArr) {
         if (friendId === userId) { continue; }
-        // if (presence[friendId]) {
-        //     presenceArr.unshift(presence[friendId]);
-        // } else {
-        //     presenceArr.push(presence[friendId]);
-        // }
-
-        // only return presence info of online friends
         if (presence[friendId]) {
             presenceArr.push(presence[friendId]);
         }
     }
-    console.log(presenceArr);
+    console.log('presenceArr', presenceArr);
 
     return {
         statusCode: 200,
