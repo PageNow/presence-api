@@ -89,7 +89,6 @@ exports.handler = async function() {
         }
         
         const postCalls = connectionDataArr.map(async ({ friendId, connectionId }) => {
-            console.log('postCall connectionId', connectionId);
             try {
                 await apigwManagementApi.postToConnection({
                     ConnectionId: connectionId,

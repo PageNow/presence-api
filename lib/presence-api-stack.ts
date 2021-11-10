@@ -315,7 +315,9 @@ export class PresenceApiStack extends CDK.Stack {
             resource: webSocketApi.apiId,
         });
 
-        [ 'update_presence', 'test_update_presence', 'timeout', 'test_timeout' ].forEach(fn => {
+        [ 'update_presence', 'test_update_presence', 'timeout',
+          'test_timeout', 'close_connection'
+        ].forEach(fn => {
             this.getFn(fn).addToRolePolicy(
                 new IAM.PolicyStatement({
                     actions: ['execute-api:ManageConnections'],
@@ -329,7 +331,11 @@ export class PresenceApiStack extends CDK.Stack {
             .addEnvironment("WSS_DOMAIN_NAME", webSocketApi.apiEndpoint)
             .addEnvironment("WSS_STAGE", apiStageProd.stageName)
             .addEnvironment("WSS_STAGE_DEV", apiStageDev.stageName);
-            // .addToRolePolicy(allowEventBridge);
+
+        this.getFn("close_connection")
+            .addEnvironment("WSS_DOMAIN_NAME", webSocketApi.apiEndpoint)
+            .addEnvironment("WSS_STAGE", apiStageProd.stageName)
+            .addEnvironment("WSS_STAGE_DEV", apiStageDev.stageName);
 
         /**
          * User Pool
@@ -347,10 +353,10 @@ export class PresenceApiStack extends CDK.Stack {
             },
             defaultCorsPreflightOptions: {
                 allowHeaders: [
-                  'Content-Type',
-                  'X-Amz-Date',
-                  'Authorization',
-                  'X-Api-Key',
+                    'Content-Type',
+                    'X-Amz-Date',
+                    'Authorization',
+                    'X-Api-Key',
                 ],
                 allowMethods: ['OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
                 allowCredentials: true,
