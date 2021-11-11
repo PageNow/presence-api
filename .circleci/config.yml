@@ -1,0 +1,20 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@3.2.0
+jobs:
+  build:
+    working_directory: ~/presence-api
+    docker:
+      - image: circleci/node:12-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          key: presence-api-{{ .Branch }}-{{ checksum "package-lock.json" }}
+      - run: npm install
+      - save_cache:
+          key: presence-api-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - "node_modules"
+      - run: npm run test -- --coverage --no-progress
+      - codecov/upload:
+          file: ./coverage/presence-api/lcov.info

@@ -1,82 +1,71 @@
-import { promisify } from "util";
-import * as AWS from '../mocks/aws-sdk';
-const redis = require('redis-mock');
+const { promisify } = require('util');
+const mockRedis = require('redis-mock');
 const heartbeat = require('../../src/functions/heartbeat/heartbeat');
-jest.mock('redis', () => redis);
-jest.mock('aws-sdk', () => AWS);
+jest.mock('redis', () => mockRedis);
+
+const data = {
+    connection1: "1",
+    user1: "user1",
+    user2: "user2"
+};
 
 describe("Heartbeat function", () => {
-    test("Exports a handler function", () => {
+    let client;
+    let hset;
+    let zscore;
+
+    beforeAll(async () => {
+        client = mockRedis.createClient();
+        hset = promisify(client.hset).bind(client);
+        zscore = promisify(client.zscore).bind(client);
+        await hset("presence_connection_user", data.connection1, data.user1);
+    });
+
+    it('exports a handler function', () => {
         expect(heartbeat).toHaveProperty('handler');
         expect(typeof heartbeat.handler).toBe("function");
     });
 
-    describe("Event parameter: id missing", () => {
-        const missingMessage = "Missing argument 'id'";
-
-        test("Null event", async () => {
-            await expect(heartbeat.handler).rejects.toThrow(missingMessage);
-        });
-        test("Empty event", async () => {
-            await expect(heartbeat.handler({})).rejects.toThrow(missingMessage);
-        });
-        test("No argument event", async () => {
-            await expect(heartbeat.handler({test: 1})).rejects.toThrow(missingMessage);
-        });
-        test("Empty argument", async () => {
-            await expect(heartbeat.handler({arguments: {}})).rejects.toThrow(missingMessage);
-        });
-        test("No id in arguments", async () => {
-            await expect(heartbeat.handler({arguments: {test: 1}})).rejects.toThrow(missingMessage);
-        });
-        test("Id passed ok", async () => {
-            await expect(heartbeat.handler({arguments: {id: "test_id"}})).resolves.toMatchObject({id: "test_id"});
-        });
+    it('should return authentication error', async () => {
+        const authErrorResponse = {
+            statusCode: 500,
+            body: 'Authentication error'
+        };
+        const event = {
+            requestContext: {
+                connectionId: "2"
+            }
+        };
+        await expect(heartbeat.handler(event)).resolves.toMatchObject(authErrorResponse);
     });
 
-    describe("Heartbeat saved", () => {
-        const testMember = "test_heartbeat";
-        const client = redis.createClient();
-        const events = new AWS.EventBridge();
-        // make sure key is not set
-        const zscore = promisify(client.zscore).bind(client);
-        test("ZSCORE not set", async () => {
-            await expect(zscore("presence", testMember)).resolves.toBe(null);
-        });
-        test("Heartbeat return", async () => {
-            events.putEvents.mockClear();
-            await expect(heartbeat.handler({arguments: {id: testMember}}))
-                .resolves.toMatchObject({id: testMember, status: "online"});
-        });
-        test("Check EventBridge call", () => {
-            expect(events.putEvents).toHaveBeenCalledTimes(1);
-            expect(events.putEvents).toHaveBeenCalledWith({
-                "Entries": [expect.objectContaining({
-                    "DetailType": "presence.connected",
-                    "Detail": JSON.stringify({id: testMember})
-                })]
-            });
-        });
-        let stamp: number;
-        test("ZSCORE set", async () => {
-            const result = await zscore("presence", testMember);
-            expect(typeof result).toBe('string');
-            expect(parseInt(result)).not.toBeNaN();
-            stamp = parseInt(result);
-        });
-        test("Heartbeat still online", async () => {
-            events.putEvents.mockClear();
-            await expect(heartbeat.handler({arguments: {id: testMember}}))
-                .resolves.toMatchObject({id: testMember, status: "online"});
-        });
-        test("Heartbeat update: no events sent", () => {
-            expect(events.putEvents).not.toHaveBeenCalled();
-        });
-        test("ZSCORE updated", async () => {
-            const result = await zscore("presence", testMember);
-            expect(typeof result).toBe('string');
-            expect(parseInt(result)).not.toBeNaN();
-            expect(parseInt(result)).toBeGreaterThan(stamp);
-        });
+    it('should execute heartbeat', async () => {
+        const event = {
+            requestContext: {
+                connectionId: data.connection1
+            }
+        };
+        expect(zscore("status", data.user1)).resolves.toBe(null);
+        await expect(heartbeat.handler(event)).resolves
+            .toMatchObject({ statusCode: 200, body: 'Data sent' });
+        await expect(zscore("status", data.user2)).resolves.toBe(null);
+        const result = await zscore("status", data.user1);
+        expect(result).not.toBe(null);
+    });
+
+    it('should update status via heartbeat', async () => {
+        const event = {
+            requestContext: {
+                connectionId: data.connection1
+            }
+        };
+        await heartbeat.handler(event);
+        let result = await zscore("status", data.user1);
+        const stamp1 = parseInt(result, 10);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await heartbeat.handler(event);
+        result = await zscore("status", data.user1);
+        const stamp2 = parseInt(result, 10);
+        expect(stamp2).toBeGreaterThan(stamp1);
     });
 });
