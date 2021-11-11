@@ -1,4 +1,8 @@
 # presence-api
+
+[![CircleCI](https://circleci.com/gh/PageNow/presence-api/tree/main.svg?style=svg&circle-token=5e7032cef952ec6e36876b894bff5d81afc0d643)](https://circleci.com/gh/PageNow/presence-api/tree/main)
+
+
 API for presence information
 
 ## Architecture
