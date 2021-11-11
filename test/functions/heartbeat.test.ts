@@ -9,7 +9,7 @@ const data = {
     user2: "user2"
 };
 
-describe("Heartbeat function", () => {
+describe("Lambda function - heartbeat", () => {
     let client;
     let hset;
     let zscore;

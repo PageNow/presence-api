@@ -17,7 +17,6 @@ exports.handler = async function(event) {
     
     try {
         await zadd('status', Date.now(), userId);
-        console.log('zadd status');
     } catch (error) {
         console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
