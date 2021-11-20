@@ -33,7 +33,7 @@ We use a single REDIS client cluster with four fields - `presence_user_connectio
 
 ### AWS Lambda
 
-Provides all the presence related functionalities with serverless framework.
+It provides all the presence functionalities with serverless framework.
 
 * `connect` is invoked via websocket when a user connects to it. It stores the user's connection id in *presence_user_connection* and *presence_connection_user* Redis field.
 * `heartbeat` is invoked every minute via websocket from the Chrome extension. It updates the timestamp of _status_ Redis field.
@@ -94,7 +94,7 @@ CLIENT_URL=<Url of the chat client>
 
 For initialization, bootstrap AWS CDK by runnin
 ```shell
-cdk bootstrap aws://257206538165/us-east-1
+cdk bootstrap aws://<AWS Account Id>/<AWS Region>
 ```
 Refer to https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html for more details.
 
