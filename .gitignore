@@ -16,3 +16,5 @@ test/*/*.js
 presence.json
 
 events/
+
+.DS_Store

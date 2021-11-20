@@ -14,7 +14,6 @@ const hdel = promisify(redisPresence.hdel).bind(redisPresence);
  * 
  * 1. Use `multi` to chain Redis commands
  * 2. Commands are zrangebyscore to retrieve expired id, zremrangebyscore to remove them
- * 3. Send events for ids
  */
 exports.handler = async function() {
     // Get list of friends

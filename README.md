@@ -7,43 +7,100 @@ API for presence information
 
 ## Architecture
 
-### REDIS
+### API Architecture Overview Diagram
 
-* We need to use two REDIS clients - one (presence) for storing { userId: timestamp } and one (status) for storing { userId: pageInfo } where pageInfo is a stringified JSON of { url: string, title: string }
+![presence_api_overview](./images/presence_api_overview.png)
 
-### Event Flow
+### API Architecture Details Diagram
 
-* Every minute, AWS Events calls timeout lambda function, which is put as an EventBridge event, which calls on_disconnect lambda function. 
+![presence_api_details](./images/presence_api_details.png)
 
-* connect.js will be called when the url changes and on the initial connection. heartbeat.js will be called by the page if it has the same url as the redisUrl.
+## Components
 
-## CDK Bootstrap
+### AWS RDS (Postgres)
 
+* We expose AWS RDS via AWS RDS Proxy.
+* The schema is defined in [user-api](https://github.com/PageNow/user-api).
+* The permission for Lambda to access AWS RDS Postgres is set up in `lib/presence-api-stack.ts`.
+
+### AWS Elasticache (Redis)
+
+We use a single REDIS client cluster with four fields - `presence_user_connection`, `presence_connection_user`, `status`, `page`.
+
+* `presence_user_connection` stores { user_id: connection_id } and `presence_connection_user` stores { connection_id: user_id }. They are used to manage connection ids for each user.
+* `status` stores { user_id: timestamp } with timestamp as score. It is used to determine whether a user is online or not.
+* `presence` stores { user_id: page strin } where page string is a JSON string of { url: string, title: string }. It is the _url_ and _title_ of tabs users are on.
+
+### AWS Lambda
+
+Provides all the presence related functionalities with serverless framework.
+
+* `connect` is invoked via websocket when a user connects to it. It stores the user's connection id in *presence_user_connection* and *presence_connection_user* Redis field.
+* `heartbeat` is invoked every minute via websocket from the Chrome extension. It updates the timestamp of _status_ Redis field.
+* `update_presence` is invoked via websocket when user switches the Chrome page. It updates timestamp of *status* Redis field and page information of *page* Redis field.
+* `close_connection` is invoked via websocket when user closes websocket connection. It removes user's information (connection id, timestamp, and page information) from all Redis fields. 
+* `timeout` is invoked every 3 minutes by AWS Eventbridge to identify offline users and remove their information from Redis.
+* `get_presence` is invoked via REST Api. It returns the presence information of every friend of the user who invokes the function.
+* `get_user_presence` is invoked via REST Api. It returns the presence information of the target user provided by the caller.
+
+### AWS API Gateway
+
+* REST API - Provides endpoint for retrieving the current snapshot of presence data of users.
+
+* Websocket API - Provides websocket connection for Chrome extension `background.js` to send and retrieve real-time presence data.
+
+### AWS EventBridge
+
+CloudWatch triggers EventBridge event every minute to invoke Lambda `timeout` function.
+
+## Setup
+
+### Environment Variables
+
+In `.env` set the following environment variables.
+```
+AWS_REGION=<AWS region>
+COGNITO_POOL_ID=<AWS Cognito User Pool Id>
+
+VPC_ID=<VPC of the backend>
+PRIVATE_ROUTE_TABLE_ID=<Route Table id of subnets AWS RDS resides in>
+PRIVATE_SUBNET1_ID=<Id of subnet1 AWS RDS resides in>
+PRIVATE_SUBNET2_ID=<Id of subnet2 AWS RDS resides in>
+
+SUBNET1_AZ=<Availability zone of subnet1 (e.g. us-west-2a)>
+SUBNET2_AZ=<Availability zone of subnet2>
+
+RDS_PROXY_SG_ID=<Security Group of AWS RDS Proxy>
+RDS_HOST=<AWS RDS Host>
+RDS_PORT=<AWS RDS Port Number>
+RDS_USERNAME=<AWS RDS username>
+RDS_PASSWORD=<AWS RDS password>
+RDS_DB_NAME=<AWS RDS database name>
+
+RDS_PROXY_ARN=<AWS RDS Proxy arn>
+RDS_PROXY_NAME=<AWS RDS Proxy name>
+
+LAMBDA_SG_ID=<AWS Lambda Security Group if it exists. 'none' otherwise>
+REDIS_SG_ID=<AWS Elasticache Security Group if it exists. 'none' otherwise>
+REDIS_PRIMARY_ENDPOINT_ADDRESS=<Elasticache primary endpoint host if it exists. 'none' otherwise>
+REDIS_PRIMARY_ENDPOINT_PORT=<Elasticache primary endpoint port if it exists. 'none' otherwise>
+REDIS_READER_ENDPOINT_ADDRESS=<Elasticache reader endpoint host if it exists. 'none' otherwise>
+REDIS_READER_ENDPOINT_PORT=<Elasticache reader endpoint port if it exists. 'none' otherwise>
+
+CLIENT_URL=<Url of the chat client>
+```
+
+### CDK Bootstrap
+
+For initialization, bootstrap AWS CDK by runnin
 ```shell
 cdk bootstrap aws://257206538165/us-east-1
 ```
 Refer to https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html for more details.
 
-## Useful CDK commands
+## Running Locally
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
-
-## Tests
-
-* ```npm run test-stack```: build and launch stack unit tests
-* ```npm run test-fn```: build and launch the lambda function unit tests
-* ```npm run test-integration```: build and launch the api integration tests
- 
-## Local Testing
-
-### Run REDIS with docker locally
+### Run Redis on Docker
 
 Run
 ```shell
@@ -60,10 +117,12 @@ Check the function identifier from template.yaml and run
 /usr/local/bin/sam local invoke [FunctionIdentifier] -e events/[event.json]
 ```
 
-## TODO
+## Deployment
 
-[] Change authorization to COGNITO
-[] Save and load the current url / page title to REDIS 
+Run
+```shell
+cdk deploy --outputs-file presence.json
+```
 
 ## References
 
@@ -91,9 +150,3 @@ Check the function identifier from template.yaml and run
 ### JWT decoding
 
 * https://github.com/awslabs/aws-support-tools/tree/master/Cognito/decode-verify-jwt
-
-### Testing
-
-## Questions
-
-* Does AppSync verify JWT token? If not, we have to verify manually on Lambda functions... (assume they verify JWT token for now)

@@ -67,13 +67,10 @@ exports.handler = async function(event) {
 
     try {
         let presence = await hget("page", targetUserId);
-        if (presence == undefined || presence == null) {
-            presence = JSON.parse(presence);
-        }
         return {
             statusCode: 200,
             headers: responseHeader,
-            body: JSON.stringify(presence)
+            body: presence
         };
     } catch (error) {
         return {
