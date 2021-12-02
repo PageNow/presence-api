@@ -2,8 +2,9 @@
 
 [![CircleCI](https://circleci.com/gh/PageNow/presence-api/tree/main.svg?style=svg&circle-token=5e7032cef952ec6e36876b894bff5d81afc0d643)](https://circleci.com/gh/PageNow/presence-api/tree/main)
 
+Link to Chrome Web Store: https://chrome.google.com/webstore/detail/pagenow/lplobiaakhgkjcldopgkbcibeilddbmc
 
-API for presence information
+Presence API provides functionalities to deal with real-time presence information. It provides websocket to retrieve friends' current activites and send the users' activities to their friends.
 
 ## Architecture
 
