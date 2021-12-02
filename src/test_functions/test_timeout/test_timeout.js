@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'locahost';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
@@ -57,7 +58,9 @@ exports.handler = async function(event) {
 
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
-        let connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+        let connectionIdArr = await hmget(
+            constants.REDIS_KEY_USER_CONNECTION, friendIdArr
+        );
         connectionDataArr = connectionIdArr.map((x, i) => {
             return { friendId: friendIdArr[i], connectionId: x };
         }).filter(x => x.connectionId);
@@ -84,8 +87,8 @@ exports.handler = async function(event) {
             console.log(error);
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("presence_user_connection", friendId).promise();
-                await hdel("presence_connection_user", connectionId).promise();
+                await hdel(constants.REDIS_KEY_USER_CONNECTION, friendId).promise();
+                await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionId).promise();
             } else {
                 throw error;
             }

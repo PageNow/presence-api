@@ -2,12 +2,15 @@ const AWS = require('aws-sdk');
 const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'locahost';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
+
+const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 /**
  * Timeout handler
@@ -34,8 +37,8 @@ exports.handler = async function() {
     
     const timestamp = Date.now() - parseInt(process.env.TIMEOUT, 10);
     const commands = redisPresence.multi();
-    commands.zrangebyscore("status", "-inf", timestamp);
-    commands.zremrangebyscore("status", "-inf", timestamp);
+    commands.zrangebyscore(constants.REDIS_KEY_STATUS, "-inf", timestamp);
+    commands.zremrangebyscore(constants.REDIS_KEY_STATUS, "-inf", timestamp);
     const execute = promisify(commands.exec).bind(commands);
     
     let userIdArr;
@@ -46,7 +49,8 @@ exports.handler = async function() {
         console.log('userIdArr', userIdArr);
         // remove page of userIds
         if (userIdArr.length > 0) {
-            await hdel("page", userIdArr);
+            await hdel(constants.REDIS_KEY_PAGE, userIdArr);
+            await hdel(constants.REDIS_KEY_LATEST_PAGE, userIdArr);
         }
     } catch (error) {
         console.log(error);
@@ -78,7 +82,7 @@ exports.handler = async function() {
         
         let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
         try {
-            let connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+            let connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
             connectionDataArr = connectionIdArr.map((x, i) => {
                 return { friendId: friendIdArr[i], connectionId: x };
             }).filter(x => x.connectionId);
@@ -100,8 +104,8 @@ exports.handler = async function() {
                 console.log(error);
                 if (error.statusCode === 410) {
                     console.log(`Found stale connection, deleting ${connectionId}`);
-                    await hdel("presence_user_connection", friendId).promise();
-                    await hdel("presence_connection_user", connectionId).promise();
+                    await hdel(constants.REDIS_KEY_USER_CONNECTION, friendId).promise();
+                    await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionId).promise();
                 } else {
                     throw error;
                 }
@@ -112,6 +116,21 @@ exports.handler = async function() {
             await Promise.all(postCalls);
         } catch (error) {
             return { statusCode: 500, body: error.stack };
+        }
+
+        // save TIMEOUT event to UserActivityHistoryTable
+        try {
+            const result = await dynamoDB.putItem({
+                TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
+                Item: {
+                    user_id: { S: userId },
+                    timestamp: { S: new Date(Date.now()).toISOString() },
+                    type: { S: "TIMEOUT" }
+                }
+            }).promise();
+            console.log(result);
+        } catch (error) {
+            console.log(error);
         }
     }
     await client.end();

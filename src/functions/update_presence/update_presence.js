@@ -3,6 +3,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const psl = require('psl');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
@@ -23,7 +24,9 @@ exports.handler = async function(event) {
         throw new Error("Missing 'title' in the event body");
     }
     
-    const userId = await hget("presence_connection_user", event.requestContext.connectionId);
+    const userId = await hget(
+        constants.REDIS_KEY_CONNECTION_USER, event.requestContext.connectionId
+    );
     if (userId == null || userId == undefined) {
         return { statusCode: 500, body: 'Authentication error' };
     }
@@ -45,8 +48,17 @@ exports.handler = async function(event) {
     // Update status and page on redis
     try {
         const commands = redisPresence.multi();
-        commands.zadd('status', Date.now(), userId);
-        commands.hset('page', userId, JSON.stringify({url: url, title: title}));
+        commands.zadd(constants.REDIS_KEY_STATUS, Date.now(), userId);
+        commands.hset(
+            constants.REDIS_KEY_PAGE,
+            userId, JSON.stringify({url: url, title: title})
+        );
+        if (url !== '') {
+            commands.hset(
+                constants.REDIS_KEY_LATEST_PAGE,
+                userId, JSON.stringify({url: url, title: title})
+            );
+        }
         const execute = promisify(commands.exec).bind(commands);
         await execute();
     } catch (error) {
@@ -92,7 +104,9 @@ exports.handler = async function(event) {
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
         if (friendIdArr.length > 0) {
-            const connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+            const connectionIdArr = await hmget(
+                constants.REDIS_KEY_USER_CONNECTION, friendIdArr
+            );
             connectionDataArr = connectionIdArr.map((x, i) => {
                 return { friendId: friendIdArr[i], connectionId: x };
             }).filter(x => x.connectionId);
@@ -103,6 +117,25 @@ exports.handler = async function(event) {
     }
     connectionDataArr.push({ friendId: userId, connectionId: event.requestContext.connectionId });
     console.log('connectionDataArr', connectionDataArr);
+
+    // get the latest presence info
+    let latestPresence = { url: '', title: '' };
+    try {
+        const latestPresenceStr = await hget(constants.REDIS_KEY_LATEST_PAGE, userId);
+        latestPresence = JSON.parse(latestPresenceStr);
+    } catch (error) {
+        console.log(error);
+    }
+    let latestDomain = '';
+    if (latestPresence.url !== '') {
+        try {
+            const latestUrlObj = new URL(latestPresence.url);
+            const parsed = psl.parse(latestUrlObj.hostname);
+            latestDomain = parsed.domain;
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     // post to all connections
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
@@ -120,15 +153,18 @@ exports.handler = async function(event) {
                     userId: userId,
                     url: url,
                     title: title,
-                    domain: domain
+                    domain: domain,
+                    latestUrl: latestPresence.url,
+                    latestTitle: latestPresence.title,
+                    latestDomain: latestDomain
                 })
             }).promise();
         } catch (error) {
             console.log(error);
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("presence_user_connection", friendId).promise();
-                await hdel("presence_connection_user", connectionId).promise();
+                await hdel(constants.REDIS_KEY_USER_CONNECTION, friendId).promise();
+                await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionId).promise();
             } else {
                 throw error;
             }
@@ -148,6 +184,7 @@ exports.handler = async function(event) {
             Item: {
                 user_id: { S: userId },
                 timestamp: { S: new Date(Date.now()).toISOString() },
+                type: { S: "UPDATE_PRESENCE" },
                 url: { S: url },
                 title: { S: title }
             }

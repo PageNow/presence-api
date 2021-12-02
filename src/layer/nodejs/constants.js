@@ -1,4 +1,9 @@
 module.exports = {
+    REDIS_KEY_PAGE: "page",
+    REDIS_KEY_LATEST_PAGE: "latest_page",
+    REDIS_KEY_STATUS: "status",
+    REDIS_KEY_USER_CONNECTION: "presence_user_connection",
+    REDIS_KEY_CONNECTION_USER: "presence_connection_user",
     DEFAULT_DOMAIN_ALLOW_ARRAY: [
         'wikipedia.org',
         'nytimes.com',

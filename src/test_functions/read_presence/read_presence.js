@@ -2,6 +2,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const _ = require('lodash');
 const data = require('/opt/nodejs/data');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
@@ -19,9 +20,9 @@ exports.handler = async function(event) {
         data.user9.user_id, data.user10.user_id
     ];
     try {
-        userConnectionIdArr = await hmget("presence_user_connection", userIdArr);
-        pageArr = await hmget("page", userIdArr);
-        const result = await zrange("status", 0, 9, "withscores");
+        userConnectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, userIdArr);
+        pageArr = await hmget(constants.REDIS_KEY_PAGE, userIdArr);
+        const result = await zrange(constants.REDIS_KEY_STATUS, 0, 9, "withscores");
         console.log(result);
         statusObj = _.fromPairs(_.chunk(result, 2));
     } catch (error) {

@@ -3,6 +3,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const psl = require('psl');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
@@ -80,8 +81,11 @@ exports.handler = async function(event) {
 
     try {
         const commands = redisPresence.multi();
-        commands.zadd('status', Date.now(), userId);
-        commands.hset('page', userId, JSON.stringify({url: url, title: title}));
+        commands.zadd(constants.REDIS_KEY_STATUS, Date.now(), userId);
+        commands.hset(
+            constants.REDIS_KEY_PAGE,
+            userId, JSON.stringify({url: url, title: title})
+        );
         const execute = promisify(commands.exec).bind(commands);
         await execute();
     } catch (error) {
@@ -91,7 +95,7 @@ exports.handler = async function(event) {
 
     let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
     try {
-        let connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+        let connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
         connectionDataArr = connectionIdArr.map((x, i) => {
             return { friendId: friendIdArr[i], connectionId: x };
         }).filter(x => x.connectionId);
@@ -117,8 +121,8 @@ exports.handler = async function(event) {
         } catch (error) {
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("presence_user_connection", friendId);
-                await hdel("presence_connection_user", connectionId);
+                await hdel(constants.REDIS_KEY_USER_CONNECTION, friendId);
+                await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionId);
             } else {
                 throw error;
             }

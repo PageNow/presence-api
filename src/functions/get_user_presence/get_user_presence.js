@@ -2,6 +2,7 @@ const redis = require('redis');
 const { promisify } = require('util');
 const { Client } = require('pg');
 const jwt = require('jsonwebtoken');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
@@ -66,7 +67,7 @@ exports.handler = async function(event) {
     }
 
     try {
-        let presence = await hget("page", targetUserId);
+        let presence = await hget(constants.REDIS_KEY_PAGE, targetUserId);
         return {
             statusCode: 200,
             headers: responseHeader,

@@ -222,14 +222,15 @@ export class PresenceApiStack extends CDK.Stack {
 
         // Add Lambda functions
         [ 
-            'heartbeat', 'timeout', 'connect', 'close_connection',
-            'get_presence', 'get_user_presence'
+            'heartbeat', 'get_presence', 'get_user_presence'
         ].forEach(
             (fn) => { this.addFunction(fn) }
         );
 
         // Add Lambda functions with DynamoDB table
-        [ 'update_presence' ].forEach((fn) => {
+        [
+            'update_presence', 'connect', 'close_connection', 'timeout'
+        ].forEach((fn) => {
             this.addFunction(fn, true, true, false, true)
         });
 

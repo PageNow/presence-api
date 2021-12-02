@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const { Client } = require('pg');
 const jwt = require('jsonwebtoken');
 const psl = require('psl');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
@@ -70,8 +71,10 @@ exports.handler = async function(event) {
     await client.end();
 
     let pageArr = [];
+    let latestPageArr = [];
     try {
-        pageArr = await hmget("page", friendIdArr);
+        pageArr = await hmget(constants.REDIS_KEY_PAGE, friendIdArr);
+        latestPageArr = await hmget(constants.REDIS_KEY_LATEST_PAGE, friendIdArr);
     } catch (error) {
         console.log(error);
         return {
@@ -81,6 +84,7 @@ exports.handler = async function(event) {
         };
     }
     console.log(pageArr);
+    console.log(latestPageArr);
     if (pageArr.length !== friendIdArr.length) {
         return {
             statusCode: 500,
@@ -94,14 +98,21 @@ exports.handler = async function(event) {
         if (pageArr[i] == undefined || pageArr[i] == null) { // offline
             presence[key] = {
                 userId: key,
-                page: null
+                page: null,
+                latestPage: null
             };
         } else { // online
-            const page = JSON.parse(pageArr[i]);
+            const page = JSON.parse(pageArr[i]); // pageArr[i] guaranteed to be not null
+            let latestPage = { url: '', title: '' };
+            if (latestPageArr[i]) {
+                latestPage = JSON.parse(latestPageArr[i]);
+            }
             presence[key] = {
                 userId: key,
-                page: page
+                page: page,
+                latestPage: latestPage
             };
+
             let domain = '';
             if (page.url !== '') {
                 try {
@@ -113,6 +124,18 @@ exports.handler = async function(event) {
                 }
             }
             presence[key].page['domain'] = domain;
+
+            let latestDomain = '';
+            if (latestPage.url !== '') {
+                try {
+                    const latestUrlObj = new URL(latestPage.url);
+                    const parsed = psl.parse(latestUrlObj.hostname);
+                    latestDomain = parsed.domain;
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            presence[key].latestPage['domain'] = latestDomain;
         }
     });
     console.log('presence', presence);

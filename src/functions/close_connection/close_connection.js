@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const { promisify } = require('util');
 const redis = require('redis');
 const { Client } = require('pg');
+const constants = require('/opt/nodejs/constants');
 
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
@@ -11,14 +12,21 @@ const hget = promisify(redisPresence.hget).bind(redisPresence);
 const zrem = promisify(redisPresence.zrem).bind(redisPresence);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 
+const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+
 exports.handler = async function(event) {
     let userId;
     try {
-        userId = await hget("presence_connection_user", event.requestContext.connectionId);
-        await hdel("presence_user_connection", userId);
-        await hdel("presence_connection_user", event.requestContext.connectionId);
-        await hdel("page", userId);
-        await zrem("status", userId);
+        userId = await hget(
+            constants.REDIS_KEY_CONNECTION_USER, event.requestContext.connectionId
+        );
+        await hdel(constants.REDIS_KEY_USER_CONNECTION, userId);
+        await hdel(
+            constants.REDIS_KEY_CONNECTION_USER, event.requestContext.connectionId
+        );
+        await hdel(constants.REDIS_KEY_PAGE, userId);
+        await hdel(constants.REDIS_KEY_LATEST_PAGE, userId);
+        await zrem(constants.REDIS_KEY_STATUS, userId);
     } catch (error) {
         console.log(error);
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
@@ -100,6 +108,21 @@ exports.handler = async function(event) {
     }
 
     await client.end();
+
+    // save CLOSE_CONNECTION event to UserActivityHistoryTable
+    try {
+        const result = await dynamoDB.putItem({
+            TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
+            Item: {
+                user_id: { S: userId },
+                timestamp: { S: new Date(Date.now()).toISOString() },
+                type: { S: "CLOSE_CONNECTION" }
+            }
+        }).promise();
+        console.log(result);
+    } catch (error) {
+        console.log(error);
+    }
 
     return {
         statusCode: 200,
