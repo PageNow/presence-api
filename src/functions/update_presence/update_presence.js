@@ -122,7 +122,9 @@ exports.handler = async function(event) {
     let latestPresence = { url: '', title: '' };
     try {
         const latestPresenceStr = await hget(constants.REDIS_KEY_LATEST_PAGE, userId);
-        latestPresence = JSON.parse(latestPresenceStr);
+        if (latestPresenceStr) {
+            latestPresence = JSON.parse(latestPresenceStr);
+        }
     } catch (error) {
         console.log(error);
     }

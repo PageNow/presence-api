@@ -10,6 +10,7 @@ const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
+const hget = promisify(redisPresence.hget).bind(redisPresence);
 
 const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
@@ -24,9 +25,11 @@ exports.handler = async function(event) {
     }
     let domain = '';
     try {
-        const urlObj = new URL(url);
-        const parsed = psl.parse(urlObj.hostname);
-        domain = parsed.domain;
+        if (url !== '') {
+            const urlObj = new URL(url);
+            const parsed = psl.parse(urlObj.hostname);
+            domain = parsed.domain;
+        }
     } catch (error) {
         console.log(error);
     }
@@ -86,6 +89,12 @@ exports.handler = async function(event) {
             constants.REDIS_KEY_PAGE,
             userId, JSON.stringify({url: url, title: title})
         );
+        if (url !== '') {
+            commands.hset(
+                constants.REDIS_KEY_LATEST_PAGE,
+                userId, JSON.stringify({url: url, title: title})
+            );
+        }
         const execute = promisify(commands.exec).bind(commands);
         await execute();
     } catch (error) {
@@ -104,6 +113,27 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
 
+    // get the latest presence info
+    let latestPresence = { url: '', title: '' };
+    try {
+        const latestPresenceStr = await hget(constants.REDIS_KEY_LATEST_PAGE, userId);
+        if (latestPresenceStr) {
+            latestPresence = JSON.parse(latestPresenceStr);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+    let latestDomain = '';
+    if (latestPresence.url !== '') {
+        try {
+            const latestUrlObj = new URL(latestPresence.url);
+            const parsed = psl.parse(latestUrlObj.hostname);
+            latestDomain = parsed.domain;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: domainName + '/' + stage
@@ -115,7 +145,10 @@ exports.handler = async function(event) {
                 ConnectionId: connectionId,
                 Data: JSON.stringify({
                     type: 'update-presence',
-                    userId, url, title, domain
+                    userId, url, title, domain,
+                    latestUrl: latestPresence.url,
+                    latestTitle: latestPresence.title,
+                    latestDomain: latestDomain
                 })
             }).promise();
         } catch (error) {
