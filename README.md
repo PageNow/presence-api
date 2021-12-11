@@ -64,7 +64,8 @@ AWS_REGION=<AWS region>
 COGNITO_POOL_ID=<AWS Cognito User Pool Id>
 
 VPC_ID=<VPC of the backend>
-PRIVATE_ROUTE_TABLE_ID=<Route Table id of subnets AWS RDS resides in>
+PRIVATE_ROUTE_TABLE1_ID=<Route Table1 id of subnets AWS RDS resides in>
+PRIVATE_ROUTE_TABLE2_ID=<Route Table2 id of subnets AWS RDS resides in>
 PRIVATE_SUBNET1_ID=<Id of subnet1 AWS RDS resides in>
 PRIVATE_SUBNET2_ID=<Id of subnet2 AWS RDS resides in>
 

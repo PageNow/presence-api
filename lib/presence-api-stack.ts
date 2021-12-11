@@ -109,12 +109,12 @@ export class PresenceApiStack extends CDK.Stack {
 
         this.privateSubnet1 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet1', {
             subnetId: process.env.PRIVATE_SUBNET1_ID!,
-            routeTableId: process.env.PRIVATE_ROUTE_TABLE_ID!,
+            routeTableId: process.env.PRIVATE_ROUTE_TABLE1_ID!,
             availabilityZone: process.env.SUBNET1_AZ!
         }) as EC2.Subnet;
         this.privateSubnet2 = EC2.Subnet.fromSubnetAttributes(this, 'privateSubnet2', {
             subnetId: process.env.PRIVATE_SUBNET2_ID!,
-            routeTableId: process.env.PRIVATE_ROUTE_TABLE_ID!,
+            routeTableId: process.env.PRIVATE_ROUTE_TABLE2_ID!,
             availabilityZone: process.env.SUBNET2_AZ!
         }) as EC2.Subnet;
 
