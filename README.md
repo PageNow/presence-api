@@ -1,10 +1,15 @@
-# presence-api
+[한국어 README.md](./README_KO.md)
+
+PageNow Home Page: https://pagenow.io <br/>
+PageNow Chrome Web Store: https://chrome.google.com/webstore/detail/pagenow/lplobiaakhgkjcldopgkbcibeilddbmc
+
+# Presence API
 
 [![CircleCI](https://circleci.com/gh/PageNow/presence-api/tree/main.svg?style=svg&circle-token=5e7032cef952ec6e36876b894bff5d81afc0d643)](https://circleci.com/gh/PageNow/presence-api/tree/main)
 
-Link to Chrome Web Store: https://chrome.google.com/webstore/detail/pagenow/lplobiaakhgkjcldopgkbcibeilddbmc
+Presence API provides functionalities to deal with real-time presence information. It is an extended version of the 'Active n hours ago' feature of Messenger. Presence API provides a REST API to retrieve friends' current activites and a WebSocket API to listen to friends' and send the user's activity updates.
 
-Presence API provides functionalities to deal with real-time presence information. It provides websocket to retrieve friends' current activites and send the users' activities to their friends.
+Presence API is built using AWS CDK with TypeScript.
 
 ## Architecture
 
@@ -18,30 +23,42 @@ Presence API provides functionalities to deal with real-time presence informatio
 
 ## Components
 
-### AWS RDS (Postgres)
+The system architecture and its relevant cloud deployment details are defined in [lib/presence-api-stack.ts](./lib/presence-api-stack.ts). Lambda functions are stored in [src/functions](./src/functions/) with the Lambda layer in [src/layer](./src/layer/).
 
-* We expose AWS RDS via AWS RDS Proxy.
-* The schema is defined in [user-api](https://github.com/PageNow/user-api).
-* The permission for Lambda to access AWS RDS Postgres is set up in `lib/presence-api-stack.ts`.
+### AWS RDS (PostgreSQL)
+
+* AWS RDS is connected via AWS RDS Proxy.
+
+* The RDS database schema is defined in [user-api](https://github.com/PageNow/user-api).
+
+* The permission for Lambda to access AWS RDS Postgres is set up in [lib/presence-api-stack.ts](./lib/presence-api-stack.ts).
 
 ### AWS Elasticache (Redis)
 
 We use a single REDIS client cluster with four fields - `presence_user_connection`, `presence_connection_user`, `status`, `page`.
 
 * `presence_user_connection` stores { user_id: connection_id } and `presence_connection_user` stores { connection_id: user_id }. They are used to manage connection ids for each user.
+
 * `status` stores { user_id: timestamp } with timestamp as score. It is used to determine whether a user is online or not.
-* `presence` stores { user_id: page strin } where page string is a JSON string of { url: string, title: string }. It is the _url_ and _title_ of tabs users are on.
+
+* `presence` stores { user_id: page string } where page string is a JSON string of { url: string, title: string }. It is the _url_ and _title_ of tabs users are on.
 
 ### AWS Lambda
 
-It provides all the presence functionalities with serverless framework.
+All the presence functionalities are built with AWS Lambda functions.
 
 * `connect` is invoked via websocket when a user connects to it. It stores the user's connection id in *presence_user_connection* and *presence_connection_user* Redis field.
+
 * `heartbeat` is invoked every minute via websocket from the Chrome extension. It updates the timestamp of _status_ Redis field.
+
 * `update_presence` is invoked via websocket when user switches the Chrome page. It updates timestamp of *status* Redis field and page information of *page* Redis field.
+
 * `close_connection` is invoked via websocket when user closes websocket connection. It removes user's information (connection id, timestamp, and page information) from all Redis fields. 
+
 * `timeout` is invoked every 3 minutes by AWS Eventbridge to identify offline users and remove their information from Redis.
+
 * `get_presence` is invoked via REST Api. It returns the presence information of every friend of the user who invokes the function.
+
 * `get_user_presence` is invoked via REST Api. It returns the presence information of the target user provided by the caller.
 
 ### AWS API Gateway
@@ -52,7 +69,7 @@ It provides all the presence functionalities with serverless framework.
 
 ### AWS EventBridge
 
-CloudWatch triggers EventBridge event every minute to invoke Lambda `timeout` function.
+CloudWatch triggers EventBridge event every 3 minutes to invoke Lambda `timeout` function. A user who has not been active for the last 3 minutes is treated as offline.
 
 ## Setup
 
@@ -94,7 +111,7 @@ CLIENT_URL=<Url of the chat client>
 
 ### CDK Bootstrap
 
-For initialization, bootstrap AWS CDK by runnin
+For initialization, bootstrap AWS CDK by running
 ```shell
 cdk bootstrap aws://<AWS Account Id>/<AWS Region>
 ```
@@ -125,30 +142,3 @@ Run
 ```shell
 cdk deploy --outputs-file presence.json
 ```
-
-## References
-
-* https://github.com/aws-samples/aws-appsync-presence-api
-* https://aws.amazon.com/ko/blogs/gametech/building-a-presence-api-using-aws-appsync-aws-lambda-amazon-elasticache-and-amazon-eventbridge/
-
-### Local testing
-
-* https://github.com/aws/aws-sam-cli/issues/318#issuecomment-377770815
-
-### APIGateway Websocket
-
-* https://aws.plainenglish.io/setup-api-gateway-websocket-api-with-cdk-c1e58cf3d2be
-* https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigatewayv2-readme.html#websocket-api
-* https://docs.aws.amazon.com/cdk/api/latest/docs/aws-apigatewayv2-readme.html#websocket-api
-* https://github.com/aws-samples/simple-websockets-chat-app/blob/master/onconnect/app.js
-
-### VPC Import
-
-* https://bobbyhadz.com/blog/import-existing-vpc-aws-cdk
-
-### Lambda RDS Proxy
-* https://itnext.io/work-with-aws-rds-proxy-9d7e09668080
-
-### JWT decoding
-
-* https://github.com/awslabs/aws-support-tools/tree/master/Cognito/decode-verify-jwt
