@@ -35,7 +35,7 @@ Presence API는 실시간 활동 공유에 대한 기능을 제공합니다. 메
 
 ### AWS Elasticache (Redis)
 
-`presence_user_connection`, `presence_connection_user`, `status`, `page` 이렇게 4개의 필드가 있는 Redis 클러스터를 사용합니다.
+Redis 클러스터로 `presence_user_connection`, `presence_connection_user`, `status`, `page` 이렇게 4개의 필드를 사용합니다.
 
 * `presence_user_connection`는 { user_id: connection_id }를 저장하고, `presence_connection_user`는 { connection_id: user_id }를 저장합니다. 이는 사용자의 WebSocket API 연결을 관리하는 데에 사용됩니다.
 
