@@ -57,9 +57,9 @@ Redis 클러스터로 `presence_user_connection`, `presence_connection_user`, `s
 
 * `timeout`는 AWS Eventbridge에 의해 3분에 한 번 실행됩니다. 오프라인 사용자가 발견되면 Redis에서 해당 사용자와 관련된 값을 지웁니다.
 
-* `get_presence`는 사용자의 모든 친구의 현재 활동 상태를 제공하는 REST API가 실행합니다.
+* `get_presence`는 사용자의 모든 친구의 현재 활동 상태를 제공하는 함수로 REST API가 실행합니다.
 
-* `get_user_presence`는 사용자의 현재 활동 상태를 제공하는 REST API가 실행합니다.
+* `get_user_presence`는 사용자의 현재 활동 상태를 제공하는 함수로 REST API가 실행합니다.
 
 ### AWS API Gateway
 
