@@ -35,7 +35,7 @@ The system architecture and its relevant cloud deployment details are defined in
 
 ### AWS Elasticache (Redis)
 
-We use a single REDIS client cluster with four fields - `presence_user_connection`, `presence_connection_user`, `status`, `page`.
+We use a single REDIS client cluster with four keys - `presence_user_connection`, `presence_connection_user`, `status`, `page`.
 
 * `presence_user_connection` stores { user_id: connection_id } and `presence_connection_user` stores { connection_id: user_id }. They are used to manage connection ids for each user.
 
@@ -47,13 +47,13 @@ We use a single REDIS client cluster with four fields - `presence_user_connectio
 
 All the presence functionalities are built with AWS Lambda functions.
 
-* `connect` is invoked via websocket when a user connects to it. It stores the user's connection id in *presence_user_connection* and *presence_connection_user* Redis field.
+* `connect` is invoked via websocket when a user connects to it. It stores the user's connection id in *presence_user_connection* and *presence_connection_user* Redis key.
 
-* `heartbeat` is invoked every minute via websocket from the Chrome extension. It updates the timestamp of _status_ Redis field.
+* `heartbeat` is invoked every minute via websocket from the Chrome extension. It updates the timestamp of _status_ Redis key.
 
-* `update_presence` is invoked via websocket when user switches the Chrome page. It updates timestamp of *status* Redis field and page information of *page* Redis field.
+* `update_presence` is invoked via websocket when user switches the Chrome page. It updates timestamp of *status* Redis key and page information of *page* Redis key.
 
-* `close_connection` is invoked via websocket when user closes websocket connection. It removes user's information (connection id, timestamp, and page information) from all Redis fields. 
+* `close_connection` is invoked via websocket when user closes websocket connection. It removes user's information (connection id, timestamp, and page information) from all Redis keys. 
 
 * `timeout` is invoked every 3 minutes by AWS Eventbridge to identify offline users and remove their information from Redis.
 

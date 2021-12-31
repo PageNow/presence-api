@@ -35,7 +35,7 @@ Presence API는 실시간 활동 공유에 대한 기능을 제공합니다. 메
 
 ### AWS Elasticache (Redis)
 
-Redis 클러스터로 `presence_user_connection`, `presence_connection_user`, `status`, `page` 이렇게 4개의 필드를 사용합니다.
+Redis 클러스터로 `presence_user_connection`, `presence_connection_user`, `status`, `page` 이렇게 4개의 키를 사용합니다.
 
 * `presence_user_connection`는 { user_id: connection_id }를 저장하고, `presence_connection_user`는 { connection_id: user_id }를 저장합니다. 이는 사용자의 WebSocket API 연결을 관리하는 데에 사용됩니다.
 
@@ -47,11 +47,11 @@ Redis 클러스터로 `presence_user_connection`, `presence_connection_user`, `s
 
 모든 기능은 AWS Lambda 함수로 구현 되었습니다.
 
-* `connect`는 사용자가 웹소켓에 연결하면 실행됩니다. 사용자의 연결 아이디는 *presence_user_connection*와 *presence_connection_user* Redis 필드에 저장됩니다.
+* `connect`는 사용자가 웹소켓에 연결하면 실행됩니다. 사용자의 연결 아이디는 *presence_user_connection*와 *presence_connection_user* Redis 키에 저장됩니다.
 
-* `heartbeat`는 크롬 익스텐션이 웹소켓을 통해 1분에 한 번씩 실행합니다. *status* 필드의 timestamp를 갱신하여 사용자가 온라인 상태라는 것을 업데이트하기 위해 사용됩니다.
+* `heartbeat`는 크롬 익스텐션이 웹소켓을 통해 1분에 한 번씩 실행합니다. *status* 키의 timestamp를 갱신하여 사용자가 온라인 상태라는 것을 업데이트하기 위해 사용됩니다.
 
-* `update_presence`는 사용자가 브라우저에서 탭을 바꾸거나 새로운 페이지를 여는 등의 새로운 활동을 할 때 웹소켓을 통해 실행이 됩니다. 이 함수는 Redis의 *status* 필드의 timestamp를 업데이트하고, *page* 필드의 사용자 활동 정보를 업데이트 합니다.
+* `update_presence`는 사용자가 브라우저에서 탭을 바꾸거나 새로운 페이지를 여는 등의 새로운 활동을 할 때 웹소켓을 통해 실행이 됩니다. 이 함수는 Redis의 *status* 키의 timestamp를 업데이트하고, *page* 키의 사용자 활동 정보를 업데이트 합니다.
 
 * `close_connection`은 사용자가 웹소켓 연결을 종료하면 실행됩니다. 사용자의 연결 아이디, 활동 내용 등을 Redis에서 지웁니다.
 
