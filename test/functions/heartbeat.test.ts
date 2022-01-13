@@ -1,6 +1,6 @@
 const { promisify } = require('util');
-const mockRedis = require('redis-mock');
-const heartbeat = require('../../src/functions/heartbeat/heartbeat');
+import * as mockRedis from 'redis-mock';
+import * as heartbeat from '../../src/functions/heartbeat/heartbeat';
 jest.mock('redis', () => mockRedis);
 
 const data = {
@@ -9,15 +9,15 @@ const data = {
     user2: "user2"
 };
 
-describe("Lambda function - heartbeat", () => {
-    let client;
+describe("AWS Lambda function - heartbeat", () => {
+    let redisClient;
     let hset;
     let zscore;
 
     beforeAll(async () => {
-        client = mockRedis.createClient();
-        hset = promisify(client.hset).bind(client);
-        zscore = promisify(client.zscore).bind(client);
+        redisClient = mockRedis.createClient();
+        hset = promisify(redisClient.hset).bind(redisClient);
+        zscore = promisify(redisClient.zscore).bind(redisClient);
         await hset("presence_connection_user", data.connection1, data.user1);
     });
 
