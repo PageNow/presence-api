@@ -5,19 +5,25 @@ const jwt = require('jsonwebtoken');
 const psl = require('psl');
 const constants = require('/opt/nodejs/constants');
 
+// Redis connection variables
 const redisPresenceEndpoint = process.env.REDIS_READER_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_READER_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
+
+// promisified Redis command
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 
+// header to resolve CORS error
 const responseHeader = {
     "Access-Control-Allow-Origin": "*",
 };
 
 exports.handler = async function(event) {
+    // note that JWT is verified at AWS API Gateway level
     const jwtDecoded = jwt.decode(event.headers['Authorization']);
     const userId = jwtDecoded['cognito:username'];
 
+    // connect to AWS RDS PostgreSQL
     const client = new Client({
         user: process.env.DB_USER,
         host: process.env.DB_HOST,
@@ -38,8 +44,9 @@ exports.handler = async function(event) {
     }
 
     let friendIdArr = [];
-    let userInfoMap = {}; // map of userinfo of friends and yourself
+    let userInfoMap = {}; // map of userinfo of friends and the user
     try {
+        // SQL query to get the list of friends
         let text = `
             SELECT user_id1, user_id2 FROM friendship_table
             WHERE (user_id1 = $1 OR user_id2 = $1) AND
@@ -51,6 +58,7 @@ exports.handler = async function(event) {
         friendIdArr = result.rows.map(x => x.user_id1 === userId ? x.user_id2 : x.user_id1);
         friendIdArr.push(userId);
 
+        // SQL query to get the user information of friends
         text = `
             SELECT user_id, first_name, last_name, profile_image_extension
             FROM user_table
@@ -70,6 +78,7 @@ exports.handler = async function(event) {
     }
     await client.end();
 
+    // get the presence data and the latest shared activity data of friends
     let pageArr = [];
     let latestPageArr = [];
     try {
@@ -93,7 +102,8 @@ exports.handler = async function(event) {
         };
     }
 
-    const presence = {};
+    // organize the raw Redis data for easier processing
+    const presence = {}; // { user id: presence data }
     friendIdArr.forEach((key, i) => {
         if (pageArr[i] == undefined || pageArr[i] == null) { // offline
             presence[key] = {
@@ -140,7 +150,7 @@ exports.handler = async function(event) {
     });
     console.log('presence', presence);
 
-    const presenceArr = [];
+    const presenceArr = []; // array of presence data of friends
     for (const friendId of friendIdArr) {
         if (friendId === userId) { continue; }
         if (presence[friendId]) {
@@ -153,8 +163,8 @@ exports.handler = async function(event) {
         statusCode: 200,
         headers: responseHeader,
         body: JSON.stringify({
-            userPresence: presence[userId],
-            presenceArr: presenceArr,
+            userPresence: presence[userId], // presence data of the user
+            presenceArr: presenceArr, // presence data of friends
             userInfoMap: userInfoMap
         })
     };

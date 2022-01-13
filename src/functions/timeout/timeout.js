@@ -4,22 +4,19 @@ const { promisify } = require('util');
 const { Client } = require('pg');
 const constants = require('/opt/nodejs/constants');
 
+// Redis connection variables
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'locahost';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
+
+// promisified Redis commands
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
 const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-/**
- * Timeout handler
- * 
- * 1. Use `multi` to chain Redis commands
- * 2. Commands are zrangebyscore to retrieve expired id, zremrangebyscore to remove them
- */
 exports.handler = async function() {
-    // Get list of friends
+    // connect to AWS RDS PostgreSQL
     const client = new Client({
         user: process.env.DB_USER,
         host: process.env.DB_HOST,
@@ -35,19 +32,21 @@ exports.handler = async function() {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
     }
     
+    // set the time to determine whether the user is offline or not
     const timestamp = Date.now() - parseInt(process.env.TIMEOUT, 10);
-    const commands = redisPresence.multi();
+    const commands = redisPresence.multi(); // use transaction for Redis commands
+    // remove all the members whose score (latest activity timestamp) is before the cut-off time (i.e. stale timestamp)
     commands.zrangebyscore(constants.REDIS_KEY_STATUS, "-inf", timestamp);
     commands.zremrangebyscore(constants.REDIS_KEY_STATUS, "-inf", timestamp);
     const execute = promisify(commands.exec).bind(commands);
     
-    let userIdArr;
+    let userIdArr; // list of users who are offline
     try {
-        // Multiple commands results are returned as an array of result, one entry per command
+        // The results of multiple commands are returned as an array of result, one entry per command
         // `userIds` is the result of the first command
         [userIdArr] = await execute();
         console.log('userIdArr', userIdArr);
-        // remove page of userIds
+        // remove presence data of userIds
         if (userIdArr.length > 0) {
             await hdel(constants.REDIS_KEY_PAGE, userIdArr);
             await hdel(constants.REDIS_KEY_LATEST_PAGE, userIdArr);
@@ -62,7 +61,7 @@ exports.handler = async function() {
         endpoint: process.env.WSS_DOMAIN_NAME.replace('wss://', '') + '/' + process.env.WSS_STAGE
     });
 
-    for (const userId of userIdArr) {
+    for (const userId of userIdArr) { // for every user who is offline
         let friendIdArr = [];
         try {
             const text = `
@@ -80,7 +79,8 @@ exports.handler = async function() {
             return { statusCode: 500, body: 'Database error: ' + JSON.stringify(error) };
         }
         
-        let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
+        // array of object { friendId: friend id, connectionId, connection id }
+        let connectionDataArr = [];
         try {
             let connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
             connectionDataArr = connectionIdArr.map((x, i) => {

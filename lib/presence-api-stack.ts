@@ -40,13 +40,15 @@ export class PresenceApiStack extends CDK.Stack {
     private functions: { [key: string]: Lambda.Function } = {};
 
     /**
-     * Adds a Lambda Function to an internal list of functions indexed by name.
-     * The function code is assumed to be located in `../src/functions/${name}.js`.
+     * A function to create a Lambda function and
+     * add it to an internal dictionary of functions indexed by name.
+     * The Lambda function code is assumed to be located in `../src/functions/${name}.js`.
      * 
-     * Functions that require access to redis have "Redis Layer" attached.
-     * 
-     * @param name - name of the function
-     * @param useRedis - whether the functino uses redis or not (requires layer/VPC/env_variables if so)
+     * @param name - name of the Lambda function
+     * @param useRedis - boolean indicating whether the Lambda function accesses Redis
+     * @param usePostgres - boolean indicating whether the Lambda function accesses PostgreSQL
+     * @param isTestFunction - boolean indicating whether the Lamba function is for testing
+     * @param useDynamoDb - boolean indicating whether the Lambda function accesses DynamoDB
      */
     private addFunction = (
         name: string, useRedis: boolean = true, usePostgres: boolean = true,
@@ -61,7 +63,11 @@ export class PresenceApiStack extends CDK.Stack {
             runtime: Lambda.Runtime.NODEJS_12_X,
             handler: `${name}.handler`
         });
+
+        // Add the layer that provides packages, code, data, and constants that Lambda functions can import
         fn.addLayers(this.lambdaLayer);
+
+        // Add environment variables that the Lambda function uses
         if (useRedis) {
             fn.addEnvironment("REDIS_PRIMARY_HOST", this.redisPrimaryEndpointAddress);
             fn.addEnvironment("REDIS_PRIMARY_PORT", this.redisPrimaryEndpointPort);
@@ -80,6 +86,7 @@ export class PresenceApiStack extends CDK.Stack {
             fn.addEnvironment("USER_ACTIVITY_HISTORY_TABLE_NAME", this.userActivityHistoryTable.tableName);
             this.userActivityHistoryTable.grantWriteData(fn);
         }
+        // Add the Lambda function to the internal dictionary
         this.functions[name] = fn;
     };
 
@@ -92,13 +99,7 @@ export class PresenceApiStack extends CDK.Stack {
         return this.functions[name];
     };
 
-    /**
-     * Stack constructor
-     * 
-     * @param scope 
-     * @param id 
-     * @param props 
-     */
+    // Stack constructor
     constructor(scope: CDK.Construct, id: string, props?: CDK.StackProps) {
         super(scope, id, props);
 

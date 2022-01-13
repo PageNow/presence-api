@@ -5,9 +5,12 @@ const { Client } = require('pg');
 const psl = require('psl');
 const constants = require('/opt/nodejs/constants');
 
+// Redis connection variables
 const redisPresenceEndpoint = process.env.REDIS_PRIMARY_HOST || 'host.docker.internal';
 const redisPresencePort = process.env.REDIS_PRIMARY_PORT || 6379;
 const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoint);
+
+// promisified Redis commands
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 const hget = promisify(redisPresence.hget).bind(redisPresence);
@@ -16,14 +19,15 @@ const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
-    console.log('eventData', eventData);
+    // event body passed to the function must contain url and title
     if (eventData.url == undefined || eventData.url == null) {
         throw new Error("Missing 'url' in the event body");
     }
     if (eventData.title == undefined || eventData.title == null) {
         throw new Error("Missing 'title' in the event body");
     }
-    
+
+    // get user id using connection id
     const userId = await hget(
         constants.REDIS_KEY_CONNECTION_USER, event.requestContext.connectionId
     );
@@ -37,6 +41,7 @@ exports.handler = async function(event) {
     let domain = '';
     if (url !== '') {
         try {
+            // parse domain from url
             const urlObj = new URL(url);
             const parsed = psl.parse(urlObj.hostname);
             domain = parsed.domain;
@@ -45,14 +50,18 @@ exports.handler = async function(event) {
         }
     }
 
-    // Update status and page on redis
+    // update status and page on redis
     try {
+        // add/update Redis data using transaction to keep consistency across keys
         const commands = redisPresence.multi();
+        // update latest timestamp for the user
         commands.zadd(constants.REDIS_KEY_STATUS, Date.now(), userId);
+        // update user activity data
         commands.hset(
             constants.REDIS_KEY_PAGE,
             userId, JSON.stringify({url: url, title: title})
         );
+        // update latest shared activity only if url is not empty i.e. user allowed domain to be shared
         if (url !== '') {
             commands.hset(
                 constants.REDIS_KEY_LATEST_PAGE,
@@ -66,7 +75,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Redis error: ' + JSON.stringify(error) };
     }
 
-    // Get list of friends
+    // connect to RDS PostgreSQL
     const client = new Client({
         user: process.env.DB_USER,
         host: process.env.DB_HOST,
@@ -82,6 +91,7 @@ exports.handler = async function(event) {
         return { statusCode: 500, body: 'Database error: ' + JSON.stringify(err) };
     }
 
+    // get a list of friends
     let friendIdArr = [];
     try {
         const text = `
@@ -100,8 +110,8 @@ exports.handler = async function(event) {
     await client.end();
     console.log('friendIdArr', friendIdArr);
 
-    // get connectionId of all friends
-    let connectionDataArr = [];  // Array of object whose keys are friendId, connectionId
+    // array of object { friendId: friend id, connectionId: connection id }
+    let connectionDataArr = [];
     try {
         if (friendIdArr.length > 0) {
             const connectionIdArr = await hmget(
@@ -118,7 +128,7 @@ exports.handler = async function(event) {
     connectionDataArr.push({ friendId: userId, connectionId: event.requestContext.connectionId });
     console.log('connectionDataArr', connectionDataArr);
 
-    // get the latest presence info
+    // get the latest presence info - guarantee that the data currently in Redis is sent to users
     let latestPresence = { url: '', title: '' };
     try {
         const latestPresenceStr = await hget(constants.REDIS_KEY_LATEST_PAGE, userId);
@@ -145,8 +155,6 @@ exports.handler = async function(event) {
         endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
     });
     const postCalls = connectionDataArr.map(async ({ friendId, connectionId }) => {
-        console.log(friendId);
-        console.log(connectionId);
         try {
             await apigwManagementApi.postToConnection({
                 ConnectionId: connectionId,
