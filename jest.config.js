@@ -4,5 +4,8 @@ module.exports = {
     testMatch: ['**/*.test.ts'],
     transform: {
       '^.+\\.tsx?$': 'ts-jest'
+    },
+    moduleNameMapper: {
+        "^/opt/nodejs/constants": "<rootDir>/src/layer/nodejs/constants"
     }
 };
