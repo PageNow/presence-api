@@ -6,6 +6,7 @@ PageNow 크롬 웹스토어: https://chrome.google.com/webstore/detail/pagenow/l
 # Presence API
 
 [![CircleCI](https://circleci.com/gh/PageNow/presence-api/tree/main.svg?style=svg&circle-token=5e7032cef952ec6e36876b894bff5d81afc0d643)](https://circleci.com/gh/PageNow/presence-api/tree/main)
+[![codecov](https://codecov.io/gh/PageNow/presence-api/branch/main/graph/badge.svg?token=GT0M89PL1B)](https://codecov.io/gh/PageNow/presence-api)
 
 Presence API는 실시간 활동 공유에 대한 기능을 제공합니다. 메신저 앱에서 'N분 전에 활동'이나 온라인일 경우 초록색 동그라미로 표시되는 기능을 떠올리면 됩니다. Presence API는 친구들의 최근 활동 데이터를 제공하는 REST API와 실시간으로 활동 업데이트를 듣고 보낼 수 있는 WebSocket API로 구성되어 있습니다.
 
