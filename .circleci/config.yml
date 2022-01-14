@@ -15,6 +15,6 @@ jobs:
           key: presence-api-{{ .Branch }}-{{ checksum "package-lock.json" }}
           paths:
             - "node_modules"
-      - run: npm run test -- --no-watch --code-coverage --no-progress
+      - run: npm run test -- --coverage --no-progress
       - codecov/upload:
-          file: ./coverage/presence-api/lcov.info
+          file: ./coverage/lcov-report/lcov.info
