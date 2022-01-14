@@ -28,7 +28,8 @@ const dbConfig = {
     host: 'localhost',
     database: 'test_core_db',
     password: 'password',
-    port: 5432
+    port: 5432,
+    ssl: 'false'
 };
 
 describe("AWS Lambda function - close_connection", () => {
@@ -45,7 +46,8 @@ describe("AWS Lambda function - close_connection", () => {
             DB_USER: dbConfig.user,
             DB_HOST: dbConfig.host,
             DB_DATABASE: dbConfig.database,
-            DB_PASSWORD: dbConfig.password
+            DB_PASSWORD: dbConfig.password,
+            DB_SSL: dbConfig.ssl
         };
 
         pgClient = new Client({

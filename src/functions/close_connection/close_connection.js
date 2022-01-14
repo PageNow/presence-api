@@ -45,7 +45,7 @@ exports.handler = async function(event) {
         database: process.env.DB_DATABASE,
         password: process.env.DB_PASSWORD,
         port: parseInt(process.env.DB_PORT, 10) || 5432,
-        ssl: true
+        ssl: process.env.DB_SSL === 'true' ? true : false
     });
     try {
         await client.connect();

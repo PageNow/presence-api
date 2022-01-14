@@ -80,6 +80,7 @@ export class PresenceApiStack extends CDK.Stack {
             fn.addEnvironment("DB_DATABASE", process.env.RDS_DB_NAME!);
             fn.addEnvironment("DB_PASSWORD", process.env.RDS_PASSWORD!);
             fn.addEnvironment("DB_PORT", process.env.RDS_PORT!);
+            fn.addEnvironment("DB_SSL", "true");
             this.rdsProxy.grantConnect(fn, process.env.RDS_USERNAME!);
         }
         if (useDynamoDb) {
