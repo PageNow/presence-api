@@ -6,19 +6,11 @@ jobs:
     working_directory: ~/presence-api
     docker:
       - image: circleci/node:12-browsers
-      - image: circleci/postgres:11.0
+      - image: nimbustech/postgres-ssl:9.5
         environment:
           POSTGRES_USER: ylee
           POSTGRES_DB: test_core_db
           POSTGRES_PASSWORD: password
-        entrypoint: bash
-        command: >
-          -c '
-            openssl req -nodes -new -x509 -subj "/CN=localhost" -keyout server.key -out server.crt &&
-            chown postgres server.key &&
-            chmod 600 /server.key &&
-            exec /docker-entrypoint.sh -c ssl=on -c ssl_cert_file=/server.crt -c ssl_key_file=/server.key
-          '
     steps:
       - checkout
       - restore_cache:
