@@ -17,4 +17,4 @@ jobs:
             - "node_modules"
       - run: npm run test -- --coverage --no-progress
       - codecov/upload:
-          file: ./coverage/lcov-report/lcov.info
+          file: ./coverage/lcov.info
