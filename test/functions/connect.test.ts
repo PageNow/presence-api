@@ -34,12 +34,10 @@ const data = {
 };
 
 describe("AWS Lambda function - connect", () => {
-    let redisClient;
-    let hget;
+    const redisClient = mockRedis.createClient();
+    const hget = promisify(redisClient.hget).bind(redisClient);;
 
     beforeAll(async () => {
-        redisClient = mockRedis.createClient();
-        hget = promisify(redisClient.hget).bind(redisClient);
         process.env = { USER_ACTIVITY_HISTORY_TABLE_NAME: 'UserActivityHistoryTable' }
     });
 

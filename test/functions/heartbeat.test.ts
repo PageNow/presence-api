@@ -10,14 +10,11 @@ const data = {
 };
 
 describe("AWS Lambda function - heartbeat", () => {
-    let redisClient;
-    let hset;
-    let zscore;
+    const redisClient = mockRedis.createClient();
+    const hset = promisify(redisClient.hset).bind(redisClient);;
+    const zscore = promisify(redisClient.zscore).bind(redisClient);;
 
     beforeAll(async () => {
-        redisClient = mockRedis.createClient();
-        hset = promisify(redisClient.hset).bind(redisClient);
-        zscore = promisify(redisClient.zscore).bind(redisClient);
         await hset("presence_connection_user", data.connection1, data.user1);
     });
 
