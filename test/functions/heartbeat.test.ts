@@ -45,6 +45,8 @@ describe("AWS Lambda function - heartbeat", () => {
         expect(zscore("status", data.user1)).resolves.toBe(null);
         await expect(heartbeat.handler(event)).resolves
             .toMatchObject({ statusCode: 200, body: 'Data sent' });
+
+        // confirm that heartbeat updates user's status score in Redis
         await expect(zscore("status", data.user2)).resolves.toBe(null);
         const result = await zscore("status", data.user1);
         expect(result).not.toBe(null);
@@ -63,6 +65,8 @@ describe("AWS Lambda function - heartbeat", () => {
         await heartbeat.handler(event);
         result = await zscore("status", data.user1);
         const stamp2 = parseInt(result, 10);
+
+        // confirm that heartbeat updates the status score
         expect(stamp2).toBeGreaterThan(stamp1);
     });
 });

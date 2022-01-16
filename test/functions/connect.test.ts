@@ -9,21 +9,20 @@ import {
 // mock Redis
 jest.mock('redis', () => mockRedis);
 
-// mock DynamoDB
+// mock AWS DynamoDB
 const mockPutItem = jest.fn(() => {
     return {
-        promise: jest.fn(() => 'DyanmoDB.putItem() called')
+        promise: jest.fn(() => 'AWS.DyanmoDB.putItem() called')
     };
 });
 jest.mock('aws-sdk', () => {
-    const DynamoDB = jest.fn().mockImplementation(() => {
-        return {
-            putItem: mockPutItem
-        };
-    });
     return {
-        DynamoDB,
-    };
+        DynamoDB: jest.fn().mockImplementation(() => {
+            return {
+                putItem: mockPutItem
+            };
+        })
+    }
 });
 
 const data = {
@@ -37,7 +36,7 @@ const data = {
 
 const config = {
     userActivityHistoryTable: 'UserActivityHistoryTable'
-}
+};
 
 describe("AWS Lambda function - connect", () => {
     const redisClient = mockRedis.createClient();
@@ -59,6 +58,7 @@ describe("AWS Lambda function - connect", () => {
     });
 
     it('should set connection data to Redis', async () => {
+        // event data passed to the handler
         const event = {
             requestContext: {
                 connectionId: data.connectionId
@@ -67,6 +67,7 @@ describe("AWS Lambda function - connect", () => {
                 Authorization: JSON.stringify(data.decodedJwt)
             }
         };
+        // verify that connection data in Redis is null
         expect(hget(REDIS_KEY_USER_CONNECTION, data.userId)).resolves.toBe(null);
         expect(hget(REDIS_KEY_CONNECTION_USER, data.connectionId)).resolves.toBe(null);
         await expect(connect.handler(event)).resolves
@@ -74,6 +75,8 @@ describe("AWS Lambda function - connect", () => {
                 statusCode: 200,
                 body: JSON.stringify({ connectionId: data.connectionId})
             });
+
+        // confirm that cnonection data is set property to Redis
         const expectedConnectionId = await hget(REDIS_KEY_USER_CONNECTION, data.userId);
         const expectedUserId = await hget(REDIS_KEY_CONNECTION_USER, data.connectionId);
         expect(expectedUserId).toBe(data.userId);
@@ -89,9 +92,9 @@ describe("AWS Lambda function - connect", () => {
                 Authorization: JSON.stringify(data.decodedJwt)
             }
         };
-
         await connect.handler(event);
 
+        // confirm that user's CONNECT activity is saved to DynamoDB
         expect(mockPutItem).toHaveBeenCalledTimes(1);
         expect(mockPutItem).toHaveBeenLastCalledWith({
             TableName: config.userActivityHistoryTable,
@@ -100,6 +103,6 @@ describe("AWS Lambda function - connect", () => {
                 timestamp: { S: expect.anything() },
                 type: { S: 'CONNECT' }
             }
-        })
+        });
     });
 });
