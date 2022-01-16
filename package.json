@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "jest --runInBand",
     "test-stack": "jest stack",
     "test-fn": "jest functions",
     "test-integration": "jest integration",
@@ -19,6 +19,7 @@
     "@types/graphql": "^14.5.0",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
+    "@types/pg": "^8.6.4",
     "@types/redis-mock": "^0.17.0",
     "aws-appsync": "^4.0.5",
     "aws-cdk": "^1.127.0",

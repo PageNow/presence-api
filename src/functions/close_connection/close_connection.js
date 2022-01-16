@@ -15,8 +15,6 @@ const hget = promisify(redisPresence.hget).bind(redisPresence);
 const zrem = promisify(redisPresence.zrem).bind(redisPresence);
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 
-const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
 exports.handler = async function(event) {
     let userId;
     try {
@@ -45,7 +43,7 @@ exports.handler = async function(event) {
         database: process.env.DB_DATABASE,
         password: process.env.DB_PASSWORD,
         port: parseInt(process.env.DB_PORT, 10) || 5432,
-        ssl: process.env.DB_SSL === 'true' ? true : false
+        ssl: process.env.DB_SSL !== 'false'
     });
     try {
         await client.connect();
@@ -77,7 +75,7 @@ exports.handler = async function(event) {
     let connectionDataArr = [];
     try {
         // array of connection ids
-        let connectionIdArr = await hmget("presence_user_connection", friendIdArr);
+        let connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
         connectionDataArr = connectionIdArr.map((x, i) => {
             return { friendId: friendIdArr[i], connectionId: x };
         }).filter(x => x.connectionId); // filter on connection that is not null
@@ -106,8 +104,8 @@ exports.handler = async function(event) {
             console.log(error);
             if (error.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
-                await hdel("presence_user_connection", friendId).promise();
-                await hdel("presence_connection_user", connectionId).promise();
+                await hdel(constants.REDIS_KEY_USER_CONNECTION, friendId).promise();
+                await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionId).promise();
             } else {
                 throw error;
             }
@@ -121,6 +119,7 @@ exports.handler = async function(event) {
     }
 
     // save CLOSE_CONNECTION event to UserActivityHistoryTable
+    const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     try {
         const result = await dynamoDB.putItem({
             TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,

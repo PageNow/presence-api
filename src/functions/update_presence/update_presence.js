@@ -15,8 +15,6 @@ const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 const hget = promisify(redisPresence.hget).bind(redisPresence);
 
-const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
 exports.handler = async function(event) {
     const eventData = JSON.parse(event.body);
     // event body passed to the function must contain url and title
@@ -82,7 +80,7 @@ exports.handler = async function(event) {
         database: process.env.DB_DATABASE,
         password: process.env.DB_PASSWORD,
         port: parseInt(process.env.DB_PORT, 10) || 5432,
-        ssl: true
+        ssl: process.env.DB_SSL !== 'false'
     });
     try {
         await client.connect();
@@ -184,10 +182,12 @@ exports.handler = async function(event) {
     try {
         await Promise.all(postCalls);
     } catch (error) {
+        console.log(error);
         return { statusCode: 500, body: error.stack };
     }
 
     // save presence update to UserActivityHistoryTable
+    const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     try {
         const result = await dynamoDB.putItem({
             TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,

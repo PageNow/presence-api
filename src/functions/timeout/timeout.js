@@ -13,8 +13,6 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 const hmget = promisify(redisPresence.hmget).bind(redisPresence);
 const hdel = promisify(redisPresence.hdel).bind(redisPresence);
 
-const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
 exports.handler = async function() {
     // connect to AWS RDS PostgreSQL
     const client = new Client({
@@ -23,7 +21,7 @@ exports.handler = async function() {
         database: process.env.DB_DATABASE,
         password: process.env.DB_PASSWORD,
         port: parseInt(process.env.DB_PORT, 10) || 5432,
-        ssl: true
+        ssl: process.env.DB_SSL !== 'false'
     });
     try {
         await client.connect();
@@ -46,10 +44,16 @@ exports.handler = async function() {
         // `userIds` is the result of the first command
         [userIdArr] = await execute();
         console.log('userIdArr', userIdArr);
-        // remove presence data of userIds
         if (userIdArr.length > 0) {
+            // remove Redis presence data of users
             await hdel(constants.REDIS_KEY_PAGE, userIdArr);
             await hdel(constants.REDIS_KEY_LATEST_PAGE, userIdArr);
+            // remove Redis connection data of uesrs
+            const connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, userIdArr);
+            await hdel(constants.REDIS_KEY_USER_CONNECTION, userIdArr);
+            if (connectionIdArr.filter(x => x).length > 0) {
+                await hdel(constants.REDIS_KEY_CONNECTION_USER, connectionIdArr.filter(x => x));
+            }
         }
     } catch (error) {
         console.log(error);
@@ -82,7 +86,7 @@ exports.handler = async function() {
         // array of object { friendId: friend id, connectionId, connection id }
         let connectionDataArr = [];
         try {
-            let connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
+            const connectionIdArr = await hmget(constants.REDIS_KEY_USER_CONNECTION, friendIdArr);
             connectionDataArr = connectionIdArr.map((x, i) => {
                 return { friendId: friendIdArr[i], connectionId: x };
             }).filter(x => x.connectionId);
@@ -119,6 +123,7 @@ exports.handler = async function() {
         }
 
         // save TIMEOUT event to UserActivityHistoryTable
+        const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         try {
             const result = await dynamoDB.putItem({
                 TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,
