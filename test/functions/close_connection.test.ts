@@ -8,6 +8,12 @@ import {
     REDIS_KEY_USER_CONNECTION, REDIS_KEY_CONNECTION_USER, REDIS_KEY_PAGE,
     REDIS_KEY_LATEST_PAGE, REDIS_KEY_STATUS
 } from '../../src/layer/nodejs/constants';
+import { WSS_CONFIG, POSTGRES_CONFIG, DYNAMO_DB_CONFIG } from '../utils/config';
+import {
+    USER_ID1, USER_ID2, USER_ID3, CONNECTION_ID1, CONNECTION_ID2, CONNECTION_ID3,
+    SHARED_PAGE1, LATEST_PAGE1
+} from '../utils/data';
+import { FRIENDSHIP_TABLE_CREATE_SQL } from '../utils/sql';
 
 // mock Redis
 jest.mock('redis', () => mockRedis);
@@ -38,41 +44,10 @@ jest.mock('aws-sdk', () => {
     }
 });
 
-const data = {
-    connectionId1: 'connectionId1',
-    userId1: 'userId1',
-    status1: Date.now(),
-    page1: {
-        url: 'https://www.pagenow.io',
-        title: 'PageNow'
-    },
-    latestPage1: {
-        url: 'https://www.noninertialframe.com',
-        title: 'Noninertial Frame'
-    },
-    userId2: 'userId2',
-    connectionId2: 'connectionId2',
-    userId3: 'userId3',
-    connectionId3: 'connectionId3'
+// mock data
+const mockData = {
+    status: Date.now()
 };
-
-const dbConfig = {
-    user: 'ylee',
-    host: 'localhost',
-    database: 'test_core_db',
-    password: 'password',
-    port: 5432,
-    ssl: 'false'
-};
-
-const wssConfig = {
-    wssDomain: 'test.com',
-    wssStage: 'dev'
-};
-
-const dynamoDBConfig = {
-    userActivityHistoryTable: 'UserActivityHistoryTable'
-}
 
 describe("AWS Lambda function - close_connection", () => {
     // setup Redis commands
@@ -86,66 +61,58 @@ describe("AWS Lambda function - close_connection", () => {
 
     beforeAll(async () => {
         process.env = {
-            DB_USER: dbConfig.user,
-            DB_HOST: dbConfig.host,
-            DB_DATABASE: dbConfig.database,
-            DB_PASSWORD: dbConfig.password,
-            DB_SSL: dbConfig.ssl,
-            WSS_DOMAIN_NAME: `wss://${wssConfig.wssDomain}`,
-            WSS_STAGE: wssConfig.wssStage,
-            USER_ACTIVITY_HISTORY_TABLE_NAME: dynamoDBConfig.userActivityHistoryTable
+            DB_USER: POSTGRES_CONFIG.user,
+            DB_HOST: POSTGRES_CONFIG.host,
+            DB_DATABASE: POSTGRES_CONFIG.database,
+            DB_PASSWORD: POSTGRES_CONFIG.password,
+            DB_SSL: POSTGRES_CONFIG.ssl,
+            WSS_DOMAIN_NAME: `wss://${WSS_CONFIG.wssDomain}`,
+            WSS_STAGE: WSS_CONFIG.wssStage,
+            USER_ACTIVITY_HISTORY_TABLE_NAME: DYNAMO_DB_CONFIG.userActivityHistoryTable
         };
 
+        // connect to PostgreSQL client
         pgClient = new Client({
-            host: dbConfig.host,
-            user: dbConfig.user,
-            database: dbConfig.database,
-            password: dbConfig.password,
-            port: dbConfig.port,
+            host: POSTGRES_CONFIG.host,
+            user: POSTGRES_CONFIG.user,
+            database: POSTGRES_CONFIG.database,
+            password: POSTGRES_CONFIG.password,
+            port: POSTGRES_CONFIG.port
         });
         await pgClient.connect();
 
-        // create PostgreSQL table
-        let text = `
-            CREATE TABLE IF NOT EXISTS friendship_table (
-                user_id1     VARCHAR(50),
-                user_id2     VARCHAR(50),
-                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                accepted_at  TIMESTAMP,
-                PRIMARY KEY (user_id1, user_id2)
-            );
-        `;
-        await pgClient.query(text);
+        // create PostgreSQL friendship_table
+        await pgClient.query(FRIENDSHIP_TABLE_CREATE_SQL);
     
         // add friendship data
-        text = `
+        const text = `
             INSERT INTO friendship_table(user_id1, user_id2, accepted_at)
             VALUES
                 ($1, $2, $3),
                 ($4, $5, $6)
         `;
         const values = [
-            data.userId1, data.userId2, new Date(),
-            data.userId3, data.userId1, new Date(),
+            USER_ID1, USER_ID2, new Date(),
+            USER_ID3, USER_ID1, new Date(),
         ];
         await pgClient.query(text, values);
     });
 
     beforeEach(async () => {
         // Redis data for user 1
-        await hset(REDIS_KEY_CONNECTION_USER, data.connectionId1, data.userId1);
-        await hset(REDIS_KEY_USER_CONNECTION, data.userId1, data.connectionId1);
-        await hset(REDIS_KEY_PAGE, data.userId1, JSON.stringify(data.page1));
-        await hset(REDIS_KEY_LATEST_PAGE, data.userId1, JSON.stringify(data.latestPage1));
-        await zadd(REDIS_KEY_STATUS, data.status1, data.userId1);
+        await hset(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1, USER_ID1);
+        await hset(REDIS_KEY_USER_CONNECTION, USER_ID1, CONNECTION_ID1);
+        await hset(REDIS_KEY_PAGE, USER_ID1, JSON.stringify(SHARED_PAGE1));
+        await hset(REDIS_KEY_LATEST_PAGE, USER_ID1, JSON.stringify(LATEST_PAGE1));
+        await zadd(REDIS_KEY_STATUS, mockData.status, USER_ID1);
 
         // Redis data for user 2
-        await hset(REDIS_KEY_CONNECTION_USER, data.connectionId2, data.userId2);
-        await hset(REDIS_KEY_USER_CONNECTION, data.userId2, data.connectionId2);
+        await hset(REDIS_KEY_CONNECTION_USER, CONNECTION_ID2, USER_ID2);
+        await hset(REDIS_KEY_USER_CONNECTION, USER_ID2, CONNECTION_ID2);
 
         // Redis data for user 3
-        await hset(REDIS_KEY_CONNECTION_USER, data.connectionId3, data.userId3);
-        await hset(REDIS_KEY_USER_CONNECTION, data.userId3, data.connectionId3);
+        await hset(REDIS_KEY_CONNECTION_USER, CONNECTION_ID3, USER_ID3);
+        await hset(REDIS_KEY_USER_CONNECTION, USER_ID3, CONNECTION_ID3);
     });
 
     afterAll(async () => {
@@ -159,38 +126,38 @@ describe("AWS Lambda function - close_connection", () => {
         jest.clearAllMocks();
     });
 
-    it('exports a handler function', () => {
+    it('should export a handler function', () => {
         expect(close_connection).toHaveProperty('handler');
         expect(typeof close_connection.handler).toBe('function');
     });
 
     it('should remove user data from Redis', async () => {
         // verify that Redis data is there
-        expect(hget(REDIS_KEY_CONNECTION_USER, data.connectionId1)).resolves.toBe(data.userId1);
-        expect(hget(REDIS_KEY_USER_CONNECTION, data.userId1)).resolves.toBe(data.connectionId1);
-        expect(hget(REDIS_KEY_PAGE, data.userId1)).resolves.toBe(JSON.stringify(data.page1));
-        expect(hget(REDIS_KEY_LATEST_PAGE, data.userId1)).resolves.toBe(JSON.stringify(data.latestPage1));
-        expect(zscore(REDIS_KEY_STATUS, data.userId1)).resolves.toBe(data.status1.toString());
+        await expect(hget(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1)).resolves.toBe(USER_ID1);
+        await expect(hget(REDIS_KEY_USER_CONNECTION, USER_ID1)).resolves.toBe(CONNECTION_ID1);
+        await expect(hget(REDIS_KEY_PAGE, USER_ID1)).resolves.toBe(JSON.stringify(SHARED_PAGE1));
+        await expect(hget(REDIS_KEY_LATEST_PAGE, USER_ID1)).resolves.toBe(JSON.stringify(LATEST_PAGE1));
+        await expect(zscore(REDIS_KEY_STATUS, USER_ID1)).resolves.toBe(mockData.status.toString());
 
         const event = {
             requestContext: {
-                connectionId: data.connectionId1
+                connectionId: CONNECTION_ID1
             }
         };
         await close_connection.handler(event);
 
         // confirm that close_connection removes user data from Redis
-        await expect(hget(REDIS_KEY_CONNECTION_USER, data.connectionId1)).resolves.toBe(null);
-        await expect(hget(REDIS_KEY_USER_CONNECTION, data.userId1)).resolves.toBe(null);
-        await expect(hget(REDIS_KEY_PAGE, data.userId1)).resolves.toBe(null);
-        await expect(hget(REDIS_KEY_LATEST_PAGE, data.userId1)).resolves.toBe(null);
-        await expect(zscore(REDIS_KEY_STATUS, data.userId1)).resolves.toBe(null);
+        await expect(hget(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1)).resolves.toBe(null);
+        await expect(hget(REDIS_KEY_USER_CONNECTION, USER_ID1)).resolves.toBe(null);
+        await expect(hget(REDIS_KEY_PAGE, USER_ID1)).resolves.toBe(null);
+        await expect(hget(REDIS_KEY_LATEST_PAGE, USER_ID1)).resolves.toBe(null);
+        await expect(zscore(REDIS_KEY_STATUS, USER_ID1)).resolves.toBe(null);
     });
 
     it('should send message to connected clients', async () => {
         const event = {
             requestContext: {
-                connectionId: data.connectionId1
+                connectionId: CONNECTION_ID1
             }
         };
         await close_connection.handler(event);
@@ -198,31 +165,31 @@ describe("AWS Lambda function - close_connection", () => {
         // confirm that ApiGatewayManagementApi instance is created
         expect(AWS.ApiGatewayManagementApi).toHaveBeenCalledWith({
             apiVersion: "2018-11-29",
-            endpoint: `${wssConfig.wssDomain}/${wssConfig.wssStage}`
+            endpoint: `${WSS_CONFIG.wssDomain}/${WSS_CONFIG.wssStage}`
         });
 
         // confirm that close_connection data is posted to connected friends
         expect(mockPostToConnection).toHaveBeenCalledTimes(2);
         expect(mockPostToConnection).toHaveBeenNthCalledWith(1, {
-            ConnectionId: data.connectionId2,
+            ConnectionId: CONNECTION_ID2,
             Data: JSON.stringify({
                 type: 'presence-timeout',
-                userId: data.userId1
+                userId: USER_ID1
             })
         });
         expect(mockPostToConnection).toHaveBeenNthCalledWith(2, {
-            ConnectionId: data.connectionId3,
+            ConnectionId: CONNECTION_ID3,
             Data: JSON.stringify({
                 type: 'presence-timeout',
-                userId: data.userId1
+                userId: USER_ID1
             })
         });
     });
 
-    it('should save to DynamoDB', async () => {
+    it('should save CLOSE_CONNECTION event to DynamoDB', async () => {
         const event = {
             requestContext: {
-                connectionId: data.connectionId1
+                connectionId: CONNECTION_ID1
             }
         };
         await close_connection.handler(event);
@@ -230,9 +197,9 @@ describe("AWS Lambda function - close_connection", () => {
         // confirm that user's CLOSE_CONNECTION activity is saved to DynamoDB
         expect(mockPutItem).toHaveBeenCalledTimes(1);
         expect(mockPutItem).toHaveBeenCalledWith({
-            TableName: dynamoDBConfig.userActivityHistoryTable,
+            TableName: DYNAMO_DB_CONFIG.userActivityHistoryTable,
             Item: {
-                user_id: { S: data.userId1 },
+                user_id: { S: USER_ID1 },
                 timestamp: { S: expect.anything() },
                 type: { S: "CLOSE_CONNECTION" }
             }

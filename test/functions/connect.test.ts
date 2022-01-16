@@ -5,6 +5,7 @@ import * as connect from '../../src/functions/connect/connect';
 import { 
     REDIS_KEY_USER_CONNECTION, REDIS_KEY_CONNECTION_USER
 } from '../../src/layer/nodejs/constants';
+import { DYNAMO_DB_CONFIG } from '../utils/config';
 
 // mock Redis
 jest.mock('redis', () => mockRedis);
@@ -34,17 +35,13 @@ const data = {
     connectionId: 'connection1'
 };
 
-const config = {
-    userActivityHistoryTable: 'UserActivityHistoryTable'
-};
-
 describe("AWS Lambda function - connect", () => {
     const redisClient = mockRedis.createClient();
     const hget = promisify(redisClient.hget).bind(redisClient);
 
     beforeAll(async () => {
         process.env = {
-            USER_ACTIVITY_HISTORY_TABLE_NAME: config.userActivityHistoryTable
+            USER_ACTIVITY_HISTORY_TABLE_NAME: DYNAMO_DB_CONFIG.userActivityHistoryTable
         };
     });
 
@@ -52,7 +49,7 @@ describe("AWS Lambda function - connect", () => {
         jest.clearAllMocks();
     });
 
-    it('exports a handler function', () => {
+    it('should export a handler function', () => {
         expect(connect).toHaveProperty('handler');
         expect(typeof connect.handler).toBe('function');
     });
@@ -83,7 +80,7 @@ describe("AWS Lambda function - connect", () => {
         expect(expectedConnectionId).toBe(data.connectionId);
     });
 
-    it('should save to DynamoDB', async () => {
+    it('should save CONNECT event to DynamoDB', async () => {
         const event = {
             requestContext: {
                 connectionId: data.connectionId
@@ -97,7 +94,7 @@ describe("AWS Lambda function - connect", () => {
         // confirm that user's CONNECT activity is saved to DynamoDB
         expect(mockPutItem).toHaveBeenCalledTimes(1);
         expect(mockPutItem).toHaveBeenLastCalledWith({
-            TableName: config.userActivityHistoryTable,
+            TableName: DYNAMO_DB_CONFIG.userActivityHistoryTable,
             Item: {
                 user_id: { S: data.userId },
                 timestamp: { S: expect.anything() },

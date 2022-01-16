@@ -1,5 +1,6 @@
 const { promisify } = require('util');
 import * as mockRedis from 'redis-mock';
+
 import * as heartbeat from '../../src/functions/heartbeat/heartbeat';
 jest.mock('redis', () => mockRedis);
 
@@ -18,7 +19,7 @@ describe("AWS Lambda function - heartbeat", () => {
         await hset("presence_connection_user", data.connection1, data.user1);
     });
 
-    it('exports a handler function', () => {
+    it('should export a handler function', () => {
         expect(heartbeat).toHaveProperty('handler');
         expect(typeof heartbeat.handler).toBe("function");
     });
