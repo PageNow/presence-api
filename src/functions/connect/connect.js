@@ -11,8 +11,6 @@ const redisPresence = redis.createClient(redisPresencePort, redisPresenceEndpoin
 
 let cacheKeys; // public keys used for authentication
 
-const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-
 exports.handler = async function(event) {
     let userId;
     try {
@@ -44,6 +42,7 @@ exports.handler = async function(event) {
     }
 
     // save CONNECTION event to UserActivityHistoryTable
+    const dynamoDB = new AWS.DynamoDB({apiVersion: '2012-08-10'});
     try {
         const result = await dynamoDB.putItem({
             TableName: process.env.USER_ACTIVITY_HISTORY_TABLE_NAME,

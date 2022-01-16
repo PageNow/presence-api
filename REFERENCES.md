@@ -24,3 +24,7 @@
 ## JWT decoding
 
 * https://github.com/awslabs/aws-support-tools/tree/master/Cognito/decode-verify-jwt
+
+## Testing
+
+* https://stackoverflow.com/questions/68705353/correctly-mocking-s3-createpresignedpost-with-jest
