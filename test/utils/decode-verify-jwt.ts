@@ -2,7 +2,7 @@ async function getPublicKeys() {
     return { };
 }
 
-async function decodeVerifyJwt(authObjStr, keys) {
+async function decodeVerifyJwt(authObjStr: string, keys: any) {
     return JSON.parse(authObjStr);
 }
 

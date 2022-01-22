@@ -6,6 +6,7 @@ import {
     REDIS_KEY_USER_CONNECTION, REDIS_KEY_CONNECTION_USER
 } from '../../src/layer/nodejs/constants';
 import { DYNAMO_DB_CONFIG } from '../utils/config';
+import { USER_ID1, CONNECTION_ID1 } from '../utils/data';
 
 // mock Redis
 jest.mock('redis', () => mockRedis);
@@ -26,20 +27,27 @@ jest.mock('aws-sdk', () => {
     }
 });
 
-const data = {
-    decodedJwt: {
-        username: 'user1',
-        isValid: true
-    },
-    userId: 'user1',
-    connectionId: 'connection1'
+const decodedJwt = {
+    username: USER_ID1,
+    isValid: true
 };
 
 describe("AWS Lambda function - connect", () => {
     const redisClient = mockRedis.createClient();
     const hget = promisify(redisClient.hget).bind(redisClient);
 
+    // event data passed to the handler
+    const event = {
+        requestContext: {
+            connectionId: CONNECTION_ID1
+        },
+        queryStringParameters: {
+            Authorization: JSON.stringify(decodedJwt)
+        }
+    };
+
     beforeAll(async () => {
+        // set environment variable
         process.env = {
             USER_ACTIVITY_HISTORY_TABLE_NAME: DYNAMO_DB_CONFIG.userActivityHistoryTable
         };
@@ -55,48 +63,28 @@ describe("AWS Lambda function - connect", () => {
     });
 
     it('should set connection data to Redis', async () => {
-        // event data passed to the handler
-        const event = {
-            requestContext: {
-                connectionId: data.connectionId
-            },
-            queryStringParameters: {
-                Authorization: JSON.stringify(data.decodedJwt)
-            }
-        };
-        // verify that connection data in Redis is null
-        expect(hget(REDIS_KEY_USER_CONNECTION, data.userId)).resolves.toBe(null);
-        expect(hget(REDIS_KEY_CONNECTION_USER, data.connectionId)).resolves.toBe(null);
-        await expect(connect.handler(event)).resolves
-            .toMatchObject({ 
-                statusCode: 200,
-                body: JSON.stringify({ connectionId: data.connectionId})
-            });
+        // verify that connection data in Redis is null before the handler is called
+        expect(hget(REDIS_KEY_USER_CONNECTION, USER_ID1)).resolves.toBeNull();
+        expect(hget(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1)).resolves.toBeNull();
+        // execute connect handler
+        await connect.handler(event);
 
         // confirm that cnonection data is set property to Redis
-        const expectedConnectionId = await hget(REDIS_KEY_USER_CONNECTION, data.userId);
-        const expectedUserId = await hget(REDIS_KEY_CONNECTION_USER, data.connectionId);
-        expect(expectedUserId).toBe(data.userId);
-        expect(expectedConnectionId).toBe(data.connectionId);
+        const expectedConnectionId = await hget(REDIS_KEY_USER_CONNECTION, USER_ID1);
+        const expectedUserId = await hget(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1);
+        expect(expectedUserId).toBe(USER_ID1);
+        expect(expectedConnectionId).toBe(CONNECTION_ID1);
     });
 
     it('should save CONNECT event to DynamoDB', async () => {
-        const event = {
-            requestContext: {
-                connectionId: data.connectionId
-            },
-            queryStringParameters: {
-                Authorization: JSON.stringify(data.decodedJwt)
-            }
-        };
-        await connect.handler(event);
+        await connect.handler(event); // execute connect handler
 
         // confirm that user's CONNECT activity is saved to DynamoDB
         expect(mockPutItem).toHaveBeenCalledTimes(1);
         expect(mockPutItem).toHaveBeenLastCalledWith({
             TableName: DYNAMO_DB_CONFIG.userActivityHistoryTable,
             Item: {
-                user_id: { S: data.userId },
+                user_id: { S: USER_ID1 },
                 timestamp: { S: expect.anything() },
                 type: { S: 'CONNECT' }
             }

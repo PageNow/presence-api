@@ -8,9 +8,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --runInBand",
-    "test-stack": "jest stack",
-    "test-fn": "jest functions",
-    "test-integration": "jest integration",
+    "test-fn": "jest functions --runInBand",
     "cdk": "cdk",
     "deploy": "tsc && cdk deploy --outputs-file presence.json"
   },
