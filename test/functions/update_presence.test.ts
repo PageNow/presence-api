@@ -214,7 +214,7 @@ describe("AWS Lambda function - update_presence", () => {
             endpoint: `${config.WSS_CONFIG.wssDomain}/${config.WSS_CONFIG.wssStage}`
         });
 
-        // confirm that close_connection data is posted to connected friends
+        // confirm that update_presence data is posted to connected friends
         let messageData = JSON.stringify({
             type: 'update-presence',
             userId: data.USER_ID1,
@@ -250,7 +250,7 @@ describe("AWS Lambda function - update_presence", () => {
             }
         };
         await update_presence.handler(event);
-        // confirm that close_connection data is posted to connected friends
+        // confirm that update_presence data is posted to connected friends
         messageData = JSON.stringify({
             type: 'update-presence',
             userId: data.USER_ID1,
@@ -287,7 +287,7 @@ describe("AWS Lambda function - update_presence", () => {
         };
         await update_presence.handler(event);
 
-        // confirm that user's CLOSE_CONNECTION activity is saved to DynamoDB
+        // confirm that user's UPDATE_PRESENCE activity is saved to DynamoDB
         expect(mockPutItem).toHaveBeenCalledTimes(1);
         expect(mockPutItem).toHaveBeenCalledWith({
             TableName: config.DYNAMO_DB_CONFIG.userActivityHistoryTable,

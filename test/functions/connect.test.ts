@@ -69,7 +69,7 @@ describe("AWS Lambda function - connect", () => {
         // execute connect handler
         await connect.handler(event);
 
-        // confirm that cnonection data is set property to Redis
+        // confirm that connection data is set property to Redis
         const expectedConnectionId = await hget(REDIS_KEY_USER_CONNECTION, USER_ID1);
         const expectedUserId = await hget(REDIS_KEY_CONNECTION_USER, CONNECTION_ID1);
         expect(expectedUserId).toBe(USER_ID1);

@@ -39,7 +39,7 @@ jest.mock('aws-sdk', () => {
 });
 
 const INACTIVE_TIME_DIFF = 240000; // time difference that is considered as timeout
-const ACTIVE_TIME_DIFF = 100000; // time different that is NOT considered as timeout
+const ACTIVE_TIME_DIFF = 100000; // time difference that is NOT considered as timeout
 
 describe("AWS Lambda function - timeout", () => {
     // setup Redis commands
@@ -90,7 +90,7 @@ describe("AWS Lambda function - timeout", () => {
             data.USER_ID1, data.USER_ID2, new Date(),
             data.USER_ID3, data.USER_ID1, new Date(),
             data.USER_ID4, data.USER_ID2, new Date(),
-            data.USER_ID5, data.USER_ID5, new Date()
+            data.USER_ID4, data.USER_ID5, new Date()
         ];
         await pgClient.query(text, values);
     });
@@ -192,7 +192,7 @@ describe("AWS Lambda function - timeout", () => {
             endpoint: `${config.WSS_CONFIG.wssDomain}/${config.WSS_CONFIG.wssStage}`
         });
 
-        // confirm that close_connection data is posted to connected friends
+        // confirm that timeout data is posted to connected friends
         expect(mockPostToConnection).toHaveBeenCalledTimes(3);
         expect(mockPostToConnection).toHaveBeenNthCalledWith(1, {
             ConnectionId: data.CONNECTION_ID2,
